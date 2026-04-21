@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RCT — Rescisão de Contrato de Trabalho</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- SUPABASE SDK com fallback -->
+<script>
+// Garante que o app só inicia depois do SDK carregar
+window._sdkCarregado = false;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onload="window._sdkCarregado=true;window._tentarInit&&window._tentarInit()" onerror="window._sdkErro=true;window._tentarInit&&window._tentarInit()"></script>
+<style>
+:root{
+  --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d40;
+  --border:#2e3a52;--border2:#3d4f6e;
+  --accent:#3b82f6;--accent2:#60a5fa;--accent-glow:rgba(59,130,246,.18);
+  --green:#22c55e;--green2:#4ade80;--green-bg:rgba(34,197,94,.1);
+  --red:#ef4444;--red2:#f87171;--red-bg:rgba(239,68,68,.1);
+  --gold:#f59e0b;--gold2:#fbbf24;--gold-bg:rgba(245,158,11,.1);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --white:#fff;--shadow:0 8px 32px rgba(0,0,0,.4);--radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ===== TELA DE LOGIN ===== */
+#tela-login{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);padding:20px}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:var(--shadow)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--accent),#6366f1);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:12px}
+.login-titulo{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--white)}
+.login-sub{font-size:.82rem;color:var(--text3);margin-top:4px}
+.login-tabs{display:flex;gap:4px;background:var(--bg3);border-radius:8px;padding:4px;margin-bottom:22px}
+.login-tab{flex:1;text-align:center;padding:7px;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--text3);transition:all .2s;border:none;background:none;font-family:'Outfit',sans-serif}
+.login-tab.active{background:var(--accent);color:#fff}
+.login-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.login-field label{font-size:.72rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.login-field input{border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-family:'Outfit',sans-serif;font-size:.9rem;color:var(--text);background:var(--bg3);outline:none;transition:all .2s}
+.login-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--bg4)}
+.login-field input::placeholder{color:var(--text3)}
+.btn-login{width:100%;padding:11px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px}
+.btn-login:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,.35)}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.login-msg{font-size:.8rem;text-align:center;margin-top:12px;min-height:20px}
+.login-msg.ok{color:var(--green2)}
+.login-msg.err{color:var(--red2)}
+.login-config-link{text-align:center;margin-top:18px;font-size:.74rem;color:var(--text3)}
+.login-config-link a{color:var(--accent2);text-decoration:none}
+
+/* ===== SETUP SUPABASE ===== */
+#tela-setup{display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);padding:20px}
+.setup-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:36px;width:100%;max-width:520px;box-shadow:var(--shadow)}
+.setup-titulo{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--white);margin-bottom:6px}
+.setup-sub{font-size:.82rem;color:var(--text3);margin-bottom:24px;line-height:1.6}
+.setup-step{display:flex;gap:12px;margin-bottom:18px;align-items:flex-start}
+.setup-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.setup-step-text{font-size:.84rem;color:var(--text2);line-height:1.6}
+.setup-step-text code{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:.78rem;color:var(--accent2)}
+.setup-step-text a{color:var(--accent2);text-decoration:none}
+.setup-input-group{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+
+/* ===== HEADER DO APP ===== */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#6366f1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.logo-text{font-family:'Playfair Display',serif;font-size:1rem;color:var(--white)}
+.logo-text span{color:var(--accent2)}
+.header-right{display:flex;align-items:center;gap:10px}
+.user-badge{font-size:.75rem;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;display:flex;align-items:center;gap:6px}
+.sync-indicator{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;transition:all .3s}
+.sync-indicator.syncing{background:var(--gold);animation:pulse .8s infinite}
+.sync-indicator.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+nav{display:flex;gap:2px}
+nav button{background:none;border:none;color:var(--text3);font-family:'Outfit',sans-serif;font-size:.76rem;font-weight:500;padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .2s;white-space:nowrap}
+nav button.active,nav button:hover{background:var(--bg3);color:var(--text)}
+.btn-logout{background:var(--red-bg);border:1px solid var(--red);color:var(--red2);font-size:.73rem;padding:5px 11px;border-radius:7px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600;transition:all .2s}
+.btn-logout:hover{background:var(--red);color:#fff}
+
+/* ===== LOADING OVERLAY ===== */
+#loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,17,23,.85);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(4px)}
+#loading-overlay.show{display:flex}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{font-size:.85rem;color:var(--text2)}
+
+/* MAIN */
+main{max-width:1060px;margin:0 auto;padding:24px 16px 80px}
+.section{display:none;animation:fadeUp .2s ease}
+.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+.card-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--white);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.fg1{grid-template-columns:1fr}
+.s2{grid-column:span 2}.s3{grid-column:span 3}.s4{grid-column:span 4}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:.7rem;font-weight:600;color:var(--text3);letter-spacing:.05em;text-transform:uppercase}
+input,select,textarea{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-family:'Outfit',sans-serif;font-size:.88rem;color:var(--text);background:var(--bg3);transition:all .2s;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--bg4)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+select option{background:var(--bg3)}
+textarea{resize:vertical;min-height:54px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,.35)}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{background:var(--green2)}
+.btn-gold{background:var(--gold);color:#1a1a1a}.btn-gold:hover{background:var(--gold2)}
+.btn-o{background:transparent;border:1.5px solid var(--border2);color:var(--text2)}.btn-o:hover{border-color:var(--accent);color:var(--accent)}
+.btn-d{background:var(--red-bg);border:1px solid var(--red);color:var(--red2);font-size:.76rem;padding:5px 10px}.btn-d:hover{background:var(--red);color:#fff}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{text-align:left;padding:8px 10px;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border);font-weight:600}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text2)}
+tr:hover td{background:var(--bg3)}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600}
+.bdg-b{background:rgba(59,130,246,.15);color:var(--accent2)}
+.bdg-g{background:var(--green-bg);color:var(--green2)}
+.bdg-r{background:var(--red-bg);color:var(--red2)}
+.bdg-y{background:var(--gold-bg);color:var(--gold2)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow);animation:slideUp .22s ease}
+.modal-lg{max-width:860px}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:16px 22px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.modal-hdr-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--white)}
+.modal-cls{background:none;border:none;color:var(--text3);cursor:pointer;font-size:1.2rem;width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center}
+.modal-cls:hover{background:var(--bg3);color:var(--text)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:10px 20px;border-radius:30px;font-size:.82rem;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .3s;z-index:400}
+#toast.show{opacity:1}
+.empty{text-align:center;padding:40px 16px;color:var(--text3)}
+.empty-icon{font-size:2.5rem;margin-bottom:10px;opacity:.4}
+.empty p{font-size:.9rem}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px}
+.stat-value{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--white)}
+.stat-sub{font-size:.75rem;color:var(--text3);margin-top:2px}
+.tipo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.tipo-card{border:1.5px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;text-align:center}
+.tipo-card:hover{border-color:var(--border2);background:var(--bg3)}
+.tipo-card.selected{border-color:var(--accent);background:var(--accent-glow)}
+.tipo-icon{font-size:1.3rem;margin-bottom:4px}
+.tipo-nome{font-size:.78rem;font-weight:600;color:var(--text);line-height:1.3}
+.tipo-desc{font-size:.68rem;color:var(--text3);margin-top:2px;line-height:1.3}
+.verba-row{display:grid;grid-template-columns:1fr 90px 110px 36px;gap:7px;margin-bottom:6px;align-items:center}
+.verba-row input{margin:0}
+.rm-btn{background:none;border:none;color:var(--text3);cursor:pointer;width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;font-size:.9rem}
+.rm-btn:hover{background:var(--red-bg);color:var(--red2)}
+.verba-section{margin-bottom:20px}
+.verba-section-header{border-radius:7px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.vsh-credito{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25)}
+.vsh-debito{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22)}
+.vsh-title{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.vsh-credito .vsh-title{color:var(--green2)}
+.vsh-debito .vsh-title{color:var(--red2)}
+.vsh-sub{font-size:.71rem;color:var(--text3);margin-left:auto}
+.verba-cols{display:grid;grid-template-columns:1fr 90px 110px 36px;gap:7px;margin-bottom:5px;padding:0 1px}
+.verba-col-lbl{font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase}
+.totais-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:14px}
+.totais-linha{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+.totais-linha:last-child{border-bottom:none}
+.totais-linha.destaque{font-size:1rem;font-weight:700;color:var(--white);padding-top:10px}
+.val-verde{color:var(--green2);font-weight:600}
+.val-vermelho{color:var(--red2);font-weight:600}
+.val-liquido{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--accent2)}
+.filtro-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.filtro-row .field{min-width:140px}
+.banner{border-radius:9px;padding:10px 16px;margin-bottom:14px;font-size:.84rem;display:none;align-items:center;gap:8px}
+.banner.show{display:flex}
+.banner-ok{background:var(--green-bg);border:1px solid var(--green);color:var(--green2)}
+.aviso-toggle{display:flex;gap:8px;margin-top:6px}
+.aviso-opt{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .2s;text-align:center}
+.aviso-opt:hover{border-color:var(--border2)}
+.aviso-opt.sel-trab{border-color:var(--gold);background:var(--gold-bg)}
+.aviso-opt.sel-ind{border-color:var(--accent);background:var(--accent-glow)}
+.av-icon{font-size:1.1rem;margin-bottom:2px}
+.av-nome{font-size:.78rem;font-weight:600;color:var(--text)}
+.av-desc{font-size:.68rem;color:var(--text3);margin-top:2px}
+.ferias-info{background:var(--gold-bg);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:.78rem;color:var(--gold2);line-height:1.6}
+.ferias-info strong{display:block;margin-bottom:3px;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em}
+/* RECIBO IMPRIMÍVEL */
+.rct-via-pg{background:#fff}
+.rct-via-pg+.rct-via-pg{border-top:3px dashed #bbb;position:relative}
+.rct-via-pg+.rct-via-pg::before{content:'✂  2ª VIA — FUNCIONÁRIO';display:block;text-align:center;font-size:.68rem;color:#aaa;padding:6px 0;background:#f9f9f9}
+.rct-wrap{padding:18px 22px;font-family:'Outfit',sans-serif;background:#fff;color:#1a1a2e}
+.rct-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a2e;padding-bottom:12px;margin-bottom:14px}
+.rct-empresa-nome{font-family:'Playfair Display',serif;font-size:1.1rem;color:#1a1a2e;font-weight:700}
+.rct-empresa-sub{font-size:.72rem;color:#555;margin-top:3px;line-height:1.5}
+.rct-titulo-box{text-align:right}
+.rct-titulo{font-family:'Playfair Display',serif;font-size:1.1rem;color:#1a1a2e;margin-bottom:4px;font-weight:700;letter-spacing:.01em}
+.rct-tipo-badge{display:inline-block;background:#e8f4ff;color:#1e3a5f;border-radius:4px;padding:3px 10px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.rct-dados{display:grid;grid-template-columns:1fr 1fr;gap:7px;background:#f0f4f8;border-radius:7px;padding:10px 13px;margin-bottom:12px;font-size:.8rem;line-height:1.65}
+.rct-dados strong{font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;color:#888;display:block;margin-bottom:1px}
+.rct-tabela{width:100%;border-collapse:collapse;margin-bottom:0;font-size:.8rem;table-layout:fixed}
+.rct-tabela th{padding:6px 10px;text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.04em}
+.rct-tabela th:nth-child(1),.rct-tabela td:nth-child(1){width:auto;text-align:left}
+.rct-tabela th:nth-child(2),.rct-tabela td:nth-child(2){width:160px;text-align:center;color:#555;padding-left:8px;padding-right:8px}
+.rct-tabela th:nth-child(3),.rct-tabela td:nth-child(3){width:105px;text-align:right}
+.rct-tabela td{padding:6px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+.thead-cred tr th{background:#1b4332;color:#fff}
+.thead-desc tr th{background:#7f1d1d;color:#fff}
+.rct-subtotal-cred td{background:#d1fae5;font-weight:700;color:#1b4332}
+.rct-subtotal-desc td{background:#fee2e2;font-weight:700;color:#7f1d1d}
+.rct-liquido td{background:#1a1a2e;color:#fff;font-weight:700;font-size:.88rem}
+.rct-decl{border:1px solid #ddd;border-radius:6px;padding:10px 13px;margin-bottom:10px;font-size:.75rem;line-height:1.65;color:#333;margin-top:12px}
+.rct-pgto{font-size:.75rem;color:#555;margin-bottom:10px;padding:4px 0;margin-top:22px;display:flex;align-items:baseline;gap:3px;flex-wrap:wrap}
+.rct-pgto-linha{display:inline-block;border-bottom:1px solid #555;width:30px;margin:0 2px;vertical-align:baseline}
+.rct-pgto-mes{display:inline-block;border-bottom:1px solid #555;width:90px;margin:0 2px;vertical-align:baseline}
+.rct-pgto-ano{display:inline-block;border-bottom:1px solid #555;width:22px;margin:0 2px;vertical-align:baseline}
+.rct-ass{display:flex;justify-content:space-around;align-items:flex-end;margin-top:34px;gap:40px}
+.rct-ass-col{display:flex;flex-direction:column;align-items:center;flex:1;max-width:220px}
+.rct-ass-linha{border-top:1.5px solid #333;width:100%;margin-bottom:5px;margin-top:46px}
+.rct-ass-nome{font-size:.76rem;color:#333;font-weight:600;white-space:nowrap;text-align:center}
+.rct-ass-sub{font-size:.65rem;color:#888;text-align:center;margin-top:2px}
+.rct-rodape{text-align:center;font-size:.65rem;color:#bbb;margin-top:16px;padding-top:8px;border-top:1px solid #eee}
+.rct-bloco{position:relative;min-height:100%}
+.rct-corte{border:none;border-top:2px dashed #bbb;margin:14px 0;position:relative}
+.rct-obs-box{border:1px solid #ddd;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:.75rem;color:#555}
+
+@media(max-width:640px){
+  .fg,.fg3,.fg4,.stats-row,.tipo-grid{grid-template-columns:1fr}
+  .s2,.s3,.s4{grid-column:span 1}
+  nav button{padding:5px 7px;font-size:.72rem}
+  .verba-row{grid-template-columns:1fr 60px 90px 28px}
+}
+@media print{
+  @page{size:A4 portrait;margin:10mm 14mm}
+  .rct-via-pg{page-break-after:always;break-after:page;page-break-inside:avoid}
+  .rct-via-pg:last-child{page-break-after:avoid;break-after:avoid}
+  .modal-hdr,.btn-row-m{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TELA DE SETUP (primeira vez) ===== -->
+<div id="tela-setup">
+  <div class="setup-box">
+    <div class="setup-titulo">⚙️ Configurar Supabase</div>
+    <div class="setup-sub">Para usar o sistema online com banco de dados compartilhado, você precisa criar uma conta gratuita no Supabase e inserir as credenciais abaixo. Isso é feito <strong>uma única vez</strong>.</div>
+
+    <div class="setup-step">
+      <div class="setup-num">1</div>
+      <div class="setup-step-text">Acesse <a href="https://supabase.com" target="_blank">supabase.com</a> e crie uma conta gratuita (não precisa de cartão).</div>
+    </div>
+    <div class="setup-step">
+      <div class="setup-num">2</div>
+      <div class="setup-step-text">Crie um novo projeto. Anote a senha do banco — você vai precisar para entrar.</div>
+    </div>
+    <div class="setup-step">
+      <div class="setup-num">3</div>
+      <div class="setup-step-text">No painel do projeto, vá em <code>Settings → API</code>. Copie a <strong>Project URL</strong> e a chave <strong>anon/public</strong>.</div>
+    </div>
+    <div class="setup-step">
+      <div class="setup-num">4</div>
+      <div class="setup-step-text">Vá em <code>SQL Editor</code> e execute o SQL que está no arquivo <code>criar_tabelas.sql</code> que está junto com este HTML.</div>
+    </div>
+
+    <div class="setup-input-group">
+      <div class="field"><label>Project URL</label><input type="text" id="setup-url" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
+      <div class="field"><label>Anon Key (chave pública)</label><input type="text" id="setup-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></div>
+      <button class="btn-login" onclick="salvarSetup()">✅ Salvar e continuar</button>
+      <div class="login-msg" id="setup-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TELA DE LOGIN ===== -->
+<div id="tela-login" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">⚖️</div>
+      <div class="login-titulo">RCT Rescisão</div>
+      <div class="login-sub">Sistema de Rescisão de Contrato de Trabalho</div>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" id="tab-entrar" onclick="switchTab('entrar')">Entrar</button>
+      <button class="login-tab" id="tab-criar" onclick="switchTab('criar')">Criar conta</button>
+    </div>
+    <div class="login-field"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')fazerLogin()"></div>
+    <div class="login-field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()"></div>
+    <div class="login-field" id="campo-nome-login" style="display:none"><label>Nome completo</label><input type="text" id="login-nome" placeholder="João da Silva"></div>
+    <button class="btn-login" id="btn-login-acao" onclick="fazerLogin()">Entrar</button>
+    <div class="login-msg" id="login-msg"></div>
+    <div class="login-config-link" style="display:none"><a href="#" onclick="voltarSetup()">⚙️ Reconfigurar Supabase</a></div>
+  </div>
+</div>
+
+<!-- ===== APP PRINCIPAL ===== -->
+<div id="app-principal" style="display:none">
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚖️</div>
+    <div class="logo-text">RCT <span>Rescisão</span></div>
+  </div>
+  <nav>
+    <button class="active" onclick="go('dashboard')">Dashboard</button>
+    <button onclick="go('empresas')">Empresas</button>
+    <button onclick="go('funcionarios')">Funcionários</button>
+    <button onclick="go('rescisoes')">Rescisões</button>
+    <button onclick="go('nova')">+ Nova RCT</button>
+    <button onclick="go('config')">Config.</button>
+  </nav>
+  <div class="header-right">
+    <div class="user-badge">
+      <span class="sync-indicator" id="sync-dot"></span>
+      <span id="user-email-badge"></span>
+    </div>
+    <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+  </div>
+</header>
+
+<main>
+
+<!-- DASHBOARD -->
+<div id="sec-dashboard" class="section active">
+  <div class="stats-row" id="stats-row"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card"><div class="card-title"><span>🕐</span> Últimas rescisões</div><div id="dash-recentes"></div></div>
+    <div class="card"><div class="card-title"><span>📊</span> Por tipo</div><div id="dash-tipos"></div></div>
+  </div>
+</div>
+
+<!-- EMPRESAS -->
+<div id="sec-empresas" class="section">
+  <div class="card" id="form-empresa-card">
+    <div class="card-title"><span>🏢</span> <span id="titulo-form-emp">Cadastrar empresa</span></div>
+    <input type="hidden" id="emp-id">
+    <div class="fg fg3">
+      <div class="field s2"><label>Razão Social / Nome</label><input type="text" id="emp-nome" placeholder="Ex: SILVA TRANSPORTES LTDA" oninput="maiusculas(this)"></div>
+      <div class="field"><label>CNPJ / CPF</label><input type="text" id="emp-cnpj" placeholder="00.000.000/0001-00" oninput="mascararCNPJCPF(this)"></div>
+      <div class="field"><label>Telefone</label><input type="text" id="emp-tel" placeholder="(19) 3303-0000" oninput="mascararTel(this)"></div>
+      <div class="field"><label>E-mail</label><input type="email" id="emp-email" placeholder="rh@empresa.com.br"></div>
+      <div class="field"><label>Responsável / Contato</label><input type="text" id="emp-resp" placeholder="NOME DO RESPONSÁVEL" oninput="maiusculas(this)"></div>
+      <div class="field s2"><label>Convenção Coletiva (Sindicato)</label><input type="text" id="emp-conv" placeholder="Ex: SITRAN — Sindicato dos Transportadores" oninput="maiusculas(this)"></div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">📍 Endereço</div>
+      <div class="fg fg4">
+        <div class="field s2"><label>Logradouro / Rua</label><input type="text" id="emp-rua" placeholder="Ex: Avenida Paulista" oninput="maiusculas(this)"></div>
+        <div class="field"><label>Número</label><input type="text" id="emp-num" placeholder="175"></div>
+        <div class="field"><label>Complemento</label><input type="text" id="emp-comp" placeholder="Sala 2, Galpão..."></div>
+        <div class="field"><label>Bairro</label><input type="text" id="emp-bairro" placeholder="Centro" oninput="maiusculas(this)"></div>
+        <div class="field"><label>Cidade</label><input type="text" id="emp-cidade" placeholder="Itirapina" oninput="maiusculas(this)"></div>
+        <div class="field"><label>UF</label><input type="text" id="emp-uf" placeholder="SP" maxlength="2" oninput="maiusculas(this)"></div>
+        <div class="field"><label>CEP</label><input type="text" id="emp-cep" placeholder="00000-000" maxlength="9" oninput="mascararCEP(this)"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="salvarEmpresa()">💾 Salvar empresa</button>
+      <button class="btn btn-o" onclick="cancelarEmpresa()">Cancelar</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>📋</span> Empresas cadastradas</div>
+    <div class="filtro-row"><div class="field"><label>Buscar</label><input type="text" id="busca-emp" placeholder="Nome ou CNPJ..." oninput="renderEmpresas()"></div></div>
+    <div id="lista-empresas"></div>
+  </div>
+</div>
+
+<!-- FUNCIONÁRIOS -->
+<div id="sec-funcionarios" class="section">
+  <div class="card" id="form-func-card">
+    <div class="card-title"><span>👤</span> <span id="titulo-form-func">Cadastrar funcionário</span></div>
+    <input type="hidden" id="func-id">
+    <div class="fg fg4">
+      <div class="field s2"><label>Nome completo</label><input type="text" id="func-nome" placeholder="Ex: JOÃO DA SILVA" oninput="maiusculas(this)"></div>
+      <div class="field"><label>CPF</label><input type="text" id="func-cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascararCPF(this)"></div>
+      <div class="field"><label>RG</label><input type="text" id="func-rg" placeholder="00.000.000-0" oninput="mascararRG(this)"></div>
+      <div class="field s2"><label>Empresa</label><select id="func-empresa"><option value="">— Selecione a empresa —</option></select></div>
+      <div class="field"><label>Cargo / Função</label><input type="text" id="func-cargo" placeholder="Ex: MOTORISTA DE CARRETA" oninput="maiusculas(this)"></div>
+      <div class="field"><label>Data de admissão</label><input type="date" id="func-admissao"></div>
+      <div class="field"><label>Salário base (R$)</label><input type="text" id="func-salario" placeholder="Ex: 2.150,00" oninput="mascararSalario(this)"></div>
+      <div class="field"><label>Jornada semanal</label>
+        <select id="func-jornada"><option value="44">44h (padrão)</option><option value="40">40h</option><option value="36">36h</option><option value="30">30h</option></select>
+      </div>
+      <div class="field"><label>PIS / NIT</label><input type="text" id="func-pis" placeholder="000.00000.00-0"></div>
+      <div class="field"><label>CTPS Nº</label><input type="text" id="func-ctps" placeholder="Nº da carteira"></div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">📍 Endereço</div>
+      <div class="fg fg4">
+        <div class="field s2"><label>Logradouro / Rua</label><input type="text" id="func-rua" placeholder="Ex: Rua das Flores" oninput="maiusculas(this)"></div>
+        <div class="field"><label>Número</label><input type="text" id="func-num" placeholder="100"></div>
+        <div class="field"><label>Complemento</label><input type="text" id="func-comp" placeholder="Apto 2..."></div>
+        <div class="field"><label>Bairro</label><input type="text" id="func-bairro" placeholder="Centro" oninput="maiusculas(this)"></div>
+        <div class="field"><label>Cidade</label><input type="text" id="func-cidade" placeholder="Itirapina" oninput="maiusculas(this)"></div>
+        <div class="field"><label>UF</label><input type="text" id="func-uf" placeholder="SP" maxlength="2" oninput="maiusculas(this)"></div>
+        <div class="field"><label>CEP</label><input type="text" id="func-cep" placeholder="00000-000" maxlength="9" oninput="mascararCEP(this)"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="salvarFuncionario()">💾 Salvar funcionário</button>
+      <button class="btn btn-o" onclick="cancelarFuncionario()">Cancelar</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>👥</span> Funcionários cadastrados</div>
+    <div class="filtro-row">
+      <div class="field"><label>Buscar</label><input type="text" id="busca-func" placeholder="Nome, CPF ou cargo..." oninput="renderFuncionarios()"></div>
+      <div class="field"><label>Empresa</label><select id="filtro-emp-func" onchange="renderFuncionarios()"><option value="">Todas</option></select></div>
+    </div>
+    <div id="lista-funcionarios"></div>
+  </div>
+</div>
+
+<!-- RESCISÕES -->
+<div id="sec-rescisoes" class="section">
+  <div class="card">
+    <div class="card-title"><span>📁</span> Rescisões registradas</div>
+    <div class="filtro-row">
+      <div class="field"><label>Buscar</label><input type="text" id="busca-rct" placeholder="Nome ou CPF..." oninput="renderRescisoes()"></div>
+      <div class="field"><label>Empresa</label><select id="filtro-emp-rct" onchange="renderRescisoes()"><option value="">Todas</option></select></div>
+      <div class="field"><label>Tipo</label>
+        <select id="filtro-tipo-rct" onchange="renderRescisoes()">
+          <option value="">Todos</option>
+          <option>Sem Justa Causa</option><option>Pedido de Demissão</option>
+          <option>Justa Causa</option><option>Rescisão por Acordo</option>
+          <option>Término de Contrato</option><option>Morte do Empregado</option>
+        </select>
+      </div>
+      <button class="btn btn-o btn-sm" onclick="limparFiltrosRct()">Limpar</button>
+      <button class="btn btn-gold btn-sm" onclick="imprimirTodosRct()">🖨️ Imprimir filtradas</button>
+    </div>
+    <div id="resumo-rct" style="font-size:.82rem;color:var(--text3);margin-bottom:10px"></div>
+    <div id="lista-rescisoes"></div>
+  </div>
+</div>
+
+<!-- NOVA RCT -->
+<div id="sec-nova" class="section">
+<div id="banner-nova" class="banner banner-ok"></div>
+<div class="card">
+  <div class="card-title"><span>⚖️</span> 1. Tipo de rescisão</div>
+  <div class="tipo-grid" id="tipo-grid"></div>
+</div>
+<div class="card">
+  <div class="card-title"><span>🏢</span> 2. Empresa e funcionário</div>
+  <div class="fg fg4">
+    <div class="field s2"><label>Empresa</label>
+      <select id="rct-empresa" onchange="onEmpresaRctChange()"><option value="">— Selecione a empresa —</option></select>
+    </div>
+    <div class="field s2"><label>Funcionário</label>
+      <select id="rct-func" onchange="preencherFuncionario()"><option value="">— Selecione primeiro a empresa —</option></select>
+    </div>
+    <div class="field s2"><label>Nome completo</label><input type="text" id="rct-nome" placeholder="Nome do funcionário"></div>
+    <div class="field"><label>CPF</label><input type="text" id="rct-cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascararCPF(this)"></div>
+    <div class="field"><label>Cargo</label><input type="text" id="rct-cargo" placeholder="Cargo/Função"></div>
+    <div class="field"><label>Data de admissão</label><input type="date" id="rct-admissao"></div>
+    <div class="field"><label>Data de demissão</label><input type="date" id="rct-demissao" onchange="calcularPeriodo()"></div>
+    <div class="field"><label>Salário base (R$)</label><input type="text" id="rct-salario" placeholder="2.150,00" oninput="recalcularVerbas()"></div>
+  </div>
+  <div id="periodo-info" style="font-size:.8rem;color:var(--accent2);margin-top:8px"></div>
+</div>
+<div class="card">
+  <div class="card-title"><span>📋</span> 3. Parâmetros</div>
+  <div style="margin-bottom:16px">
+    <label style="margin-bottom:6px;display:block">Aviso Prévio</label>
+    <div class="aviso-toggle">
+      <div class="aviso-opt" id="aviso-opt-trab" onclick="selecionarAviso('trabalhado')">
+        <div class="av-icon">🗓️</div><div class="av-nome">Trabalhado</div><div class="av-desc">Funcionário cumpre o aviso</div>
+      </div>
+      <div class="aviso-opt" id="aviso-opt-ind" onclick="selecionarAviso('indenizado')">
+        <div class="av-icon">💰</div><div class="av-nome">Indenizado</div><div class="av-desc">Pago sem cumprimento</div>
+      </div>
+    </div>
+    <div id="aviso-info" style="font-size:.76rem;color:var(--text3);margin-top:6px"></div>
+  </div>
+  <div class="fg fg4">
+    <div class="field"><label>Dias de aviso prévio</label><input type="number" id="rct-dias-aviso" min="30" max="90" placeholder="30–90" oninput="recalcularVerbas()"></div>
+    <div class="field"><label>Dias trabalhados (saldo)</label><input type="number" id="rct-dias" min="1" max="31" placeholder="1–31" oninput="recalcularVerbas()"></div>
+    <div class="field"><label>Avos 13º Proporcional (1–12)</label><input type="number" id="rct-avos13" min="1" max="12" placeholder="Ex: 4 = 4/12 avos" oninput="recalcularVerbas()"></div>
+    <div class="field"><label>Avos Férias Proporcional (1–12)</label><input type="number" id="rct-avosfer" min="1" max="12" placeholder="Ex: 3 = 3/12 avos" oninput="recalcularVerbas()"></div>
+  </div>
+  <div class="ferias-info" style="margin-top:14px">
+    <strong>🏖️ Férias</strong>
+    <div class="fg fg4" style="margin-top:8px">
+      <div class="field"><label style="color:var(--gold2)">Férias vencidas (dias)</label><input type="number" id="rct-fer-venc" min="0" max="60" value="0" oninput="recalcularVerbas()" style="background:var(--bg3)"></div>
+      <div class="field s2"><label style="color:var(--gold2)">Período vencido</label><input type="text" id="rct-fer-venc-periodo" placeholder="01/08/2024 à 31/07/2025" style="background:var(--bg3)"></div>
+      <div class="field"><label style="color:var(--gold2)">Férias proporcionais</label><input type="text" id="rct-fer-prop-info" readonly style="background:var(--bg4);cursor:default;color:var(--text3)"></div>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title"><span>💰</span> 4. Verbas rescisórias</div>
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:14px">Verbas carregadas automaticamente. Ajuste se necessário.</p>
+  <div class="verba-section">
+    <div class="verba-section-header vsh-credito">
+      <span class="vsh-title">✚ Verbas a Receber</span>
+      <span class="vsh-sub" id="tot-cred-inline">R$ 0,00</span>
+    </div>
+    <div class="verba-cols"><span class="verba-col-lbl">Verba</span><span class="verba-col-lbl">Referência</span><span class="verba-col-lbl">Valor R$</span><span></span></div>
+    <div id="lista-creditos"></div>
+    <button class="btn btn-o btn-sm" onclick="addVerba('credito')" style="margin-top:4px">+ Adicionar crédito</button>
+  </div>
+  <div class="verba-section">
+    <div class="verba-section-header vsh-debito">
+      <span class="vsh-title">− Descontos e deduções</span>
+      <span class="vsh-sub" id="tot-desc-inline">R$ 0,00</span>
+    </div>
+    <div class="verba-cols"><span class="verba-col-lbl">Desconto</span><span class="verba-col-lbl">Referência</span><span class="verba-col-lbl">Valor R$</span><span></span></div>
+    <div id="lista-debitos"></div>
+    <button class="btn btn-o btn-sm" onclick="addVerba('debito')" style="margin-top:4px">+ Adicionar desconto</button>
+  </div>
+  <div class="totais-box">
+    <div class="totais-linha"><span style="color:var(--text3)">Total créditos</span><span class="val-verde" id="tot-creditos">R$ 0,00</span></div>
+    <div class="totais-linha"><span style="color:var(--text3)">Total descontos</span><span class="val-vermelho" id="tot-debitos">R$ 0,00</span></div>
+    <div class="totais-linha destaque"><span>Líquido a receber</span><span class="val-liquido" id="tot-liquido">R$ 0,00</span></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title"><span>📝</span> 5. Observações</div>
+  <div class="fg fg1"><div class="field"><label>Observações (opcional)</label><textarea id="rct-obs" placeholder="Ex: Funcionário cumpriu aviso prévio de 30 dias..."></textarea></div></div>
+  <div class="btn-row">
+    <button class="btn btn-p" onclick="gravarRct()">💾 Gravar Rescisão</button>
+    <button class="btn btn-g" onclick="gravarEVisualizarRct()">📄 Gravar e Imprimir</button>
+    <button class="btn btn-o" onclick="limparRct()">Limpar</button>
+  </div>
+</div>
+</div>
+
+<!-- CONFIG -->
+<div id="sec-config" class="section">
+  <div class="card">
+    <div class="card-title"><span>⚙️</span> Configurações</div>
+    <div class="fg">
+      <div class="field s2"><label>Nome do escritório</label><input type="text" id="cfg-esc" placeholder="Ex: Silva Contabilidade ME"></div>
+      <div class="field"><label>CRC</label><input type="text" id="cfg-crc" placeholder="CRC/SP-000000/O-5"></div>
+      <div class="field"><label>Contador responsável</label><input type="text" id="cfg-cont" placeholder="Ex: João da Silva"></div>
+      <div class="field s2"><label>Cidade (para o recibo)</label><input type="text" id="cfg-cidade" placeholder="Ex: Itirapina"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-p" onclick="salvarCfg()">💾 Salvar</button></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>🔄</span> Sincronização e backup</div>
+    <p style="font-size:.84rem;color:var(--text2);margin-bottom:14px">Todos os dados são salvos automaticamente no Supabase em tempo real. O backup abaixo exporta uma cópia local em JSON.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="exportarDados()">⬇️ Exportar backup JSON</button>
+      <label class="btn btn-o" style="cursor:pointer">⬆️ Importar backup<input type="file" accept=".json" onchange="importarDados(this)" style="display:none"></label>
+    </div>
+    <div id="backup-status" style="margin-top:12px;font-size:.82rem;display:none"></div>
+  </div>
+</div>
+
+</main>
+
+</div><!-- fim #app-principal -->
+
+<!-- MODAL RECIBO -->
+<div class="modal-overlay" id="m-rct">
+  <div class="modal modal-lg">
+    <div class="modal-hdr"><span class="modal-hdr-title">Rescisão — 1ª e 2ª via</span><button class="modal-cls" onclick="fModal('m-rct')">✕</button></div>
+    <div id="area-imp"></div>
+    <div class="btn-row btn-row-m" style="padding:0 22px 18px">
+      <button class="btn btn-p" onclick="imprimirJanela('area-imp')">🖨️ Imprimir / Salvar PDF</button>
+      <button class="btn btn-gold" id="btn-editar-rct" style="display:none" onclick="editarRctAtual()">✏️ Editar esta rescisão</button>
+      <button class="btn btn-o" onclick="fModal('m-rct')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TODOS -->
+<div class="modal-overlay" id="m-todos">
+  <div class="modal modal-lg">
+    <div class="modal-hdr"><span class="modal-hdr-title">Impressão em lote</span><button class="modal-cls" onclick="fModal('m-todos')">✕</button></div>
+    <div id="area-todos"></div>
+    <div class="btn-row btn-row-m" style="padding:0 22px 18px">
+      <button class="btn btn-p" onclick="imprimirJanela('area-todos')">🖨️ Imprimir / PDF</button>
+      <button class="btn btn-o" onclick="fModal('m-todos')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading-overlay"><div class="loading-spinner"></div><div class="loading-msg" id="loading-msg">Carregando...</div></div>
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIGURAÇÃO SUPABASE
+// ============================================================
+let SUPABASE_URL='';
+let SUPABASE_KEY='';
+let sbClient=null;
+let usuarioAtual=null;
+
+function carregarCredenciais(){
+  // Credenciais fixas — qualquer usuário abre direto no login
+  SUPABASE_URL='https://dwpvqhlmcxmexpleailx.supabase.co';
+  SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3cHZxaGxtY3htZXhwbGVhaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NTI0NTEsImV4cCI6MjA5MjEyODQ1MX0.6pApSq3KPC2FlN_J8IyWaL_yk9SnigrwMmg3hibu2W0';
+}
+function salvarSetup(){
+  const url=R('setup-url').value.trim();
+  const key=R('setup-key').value.trim();
+  const msg=R('setup-msg');
+  if(!url||!key){msg.className='login-msg err';msg.textContent='Preencha os dois campos.';return;}
+  if(!url.includes('supabase.co')){msg.className='login-msg err';msg.textContent='URL inválida. Deve conter supabase.co';return;}
+  localStorage.setItem('rct_sb_url',url);
+  localStorage.setItem('rct_sb_key',key);
+  msg.className='login-msg ok';msg.textContent='✅ Credenciais salvas! Iniciando...';
+  setTimeout(()=>iniciarApp(),800);
+}
+function voltarSetup(){
+  R('tela-login').style.display='none';
+  R('tela-setup').style.display='flex';
+}
+
+// ============================================================
+// INIT APP
+// ============================================================
+async function iniciarApp(){
+  carregarCredenciais();
+
+  // Credenciais fixas — pula setup direto para login
+  R('tela-setup').style.display='none';
+
+  // SDK não carregou (sem internet ou bloqueado)
+  if(!window._sdkCarregado||!window.supabase){
+    R('tela-setup').style.display='none';
+    R('tela-login').style.display='flex';
+    R('app-principal').style.display='none';
+    R('login-msg').className='login-msg err';
+    R('login-msg').textContent='Sem conexão com a internet. Verifique sua rede e recarregue a página.';
+    return;
+  }
+
+  try{
+    sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const {data:{session}}=await sbClient.auth.getSession();
+    if(session){
+      usuarioAtual=session.user;
+      mostrarApp();
+    } else {
+      R('tela-setup').style.display='none';
+      R('tela-login').style.display='flex';
+      R('app-principal').style.display='none';
+    }
+  }catch(e){
+    console.error('Erro ao iniciar Supabase:',e);
+    R('tela-setup').style.display='flex';
+    R('tela-login').style.display='none';
+    R('app-principal').style.display='none';
+    R('setup-msg').className='login-msg err';
+    R('setup-msg').textContent='Credenciais inválidas ou sem conexão. Verifique a URL e a chave.';
+  }
+}
+function mostrarApp(){
+  R('tela-setup').style.display='none';
+  R('tela-login').style.display='none';
+  R('app-principal').style.display='block';
+  R('user-email-badge').textContent=usuarioAtual?.email||'';
+  carregarTudo();
+}
+
+// ============================================================
+// AUTH — LOGIN / CADASTRO / LOGOUT
+// ============================================================
+let modoLogin='entrar';
+function switchTab(modo){
+  modoLogin=modo;
+  R('tab-entrar').className='login-tab'+(modo==='entrar'?' active':'');
+  R('tab-criar').className='login-tab'+(modo==='criar'?' active':'');
+  R('campo-nome-login').style.display=modo==='criar'?'flex':'none';
+  R('btn-login-acao').textContent=modo==='entrar'?'Entrar':'Criar conta';
+  R('login-msg').textContent='';
+}
+async function fazerLogin(){
+  const email=R('login-email').value.trim();
+  const senha=R('login-senha').value;
+  const msg=R('login-msg');
+  if(!email||!senha){msg.className='login-msg err';msg.textContent='Preencha e-mail e senha.';return;}
+  const btn=R('btn-login-acao');btn.disabled=true;btn.textContent='Aguarde...';
+  try{
+    let res;
+    if(modoLogin==='entrar'){
+      res=await sbClient.auth.signInWithPassword({email,password:senha});
+    } else {
+      res=await sbClient.auth.signUp({email,password:senha});
+    }
+    if(res.error){msg.className='login-msg err';msg.textContent=traduzirErroAuth(res.error.message);}
+    else {
+      usuarioAtual=res.data.user||res.data.session?.user;
+      if(modoLogin==='criar'){msg.className='login-msg ok';msg.textContent='✅ Conta criada! Verifique seu e-mail para confirmar.';}
+      else{mostrarApp();}
+    }
+  }catch(e){msg.className='login-msg err';msg.textContent='Erro de conexão.';}
+  btn.disabled=false;btn.textContent=modoLogin==='entrar'?'Entrar':'Criar conta';
+}
+async function fazerLogout(){
+  await sbClient.auth.signOut();
+  usuarioAtual=null;
+  R('app-principal').style.display='none';
+  R('tela-login').style.display='flex';
+  db={config:{cidade:''},empresas:[],funcionarios:[],rescisoes:[]};
+}
+function traduzirErroAuth(msg){
+  if(msg.includes('Invalid login'))return'E-mail ou senha incorretos.';
+  if(msg.includes('Email not confirmed'))return'E-mail não confirmado. Verifique sua caixa de entrada.';
+  if(msg.includes('already registered'))return'Este e-mail já está cadastrado.';
+  if(msg.includes('Password should be'))return'A senha deve ter ao menos 6 caracteres.';
+  return msg;
+}
+
+// ============================================================
+// BANCO DE DADOS — SUPABASE
+// ============================================================
+let db={config:{cidade:''},empresas:[],funcionarios:[],rescisoes:[]};
+let syncTimeout=null;
+
+function setSyncStatus(status){
+  const dot=R('sync-dot');if(!dot)return;
+  dot.className='sync-indicator'+(status==='ok'?'':status==='syncing'?' syncing':' error');
+}
+
+// CARREGAR TUDO DO SUPABASE
+async function carregarTudo(){
+  showLoading('Carregando dados...');
+  setSyncStatus('syncing');
+  try{
+    const [empRes,funcRes,rctRes,cfgRes]=await Promise.all([
+      sbClient.from('empresas').select('*').order('nome'),
+      sbClient.from('funcionarios').select('*').order('nome'),
+      sbClient.from('rescisoes').select('*').order('created_at',{ascending:false}),
+      sbClient.from('configuracoes').select('*').eq('chave','config').single(),
+    ]);
+    db.empresas=empRes.data||[];
+    db.funcionarios=funcRes.data||[];
+    db.rescisoes=rctRes.data?.map(r=>({...r,...(r.dados||{}),id:r.id,_dados_original:r.dados}))||[];
+    db.config=cfgRes.data?.valor||{cidade:''};
+    setSyncStatus('ok');
+  }catch(e){setSyncStatus('error');toast('Erro ao carregar dados','var(--red)');}
+  hideLoading();
+  renderDashboard();
+}
+
+// SALVAR com debounce
+function save(){
+  setSyncStatus('syncing');
+  clearTimeout(syncTimeout);
+  syncTimeout=setTimeout(async()=>{
+    // Configurações
+    await sbClient.from('configuracoes').upsert({chave:'config',valor:db.config},{onConflict:'chave'});
+    setSyncStatus('ok');
+  },500);
+}
+
+// CRUD EMPRESAS
+async function dbSalvarEmpresa(emp){
+  setSyncStatus('syncing');
+  const {id_db,...dados}=emp;
+  // Remove campos que o Supabase não aceita
+  delete dados.id;delete dados.created_at;
+  let res;
+  if(id_db){
+    res=await sbClient.from('empresas').update(dados).eq('id',id_db).select().single();
+  } else {
+    res=await sbClient.from('empresas').insert(dados).select().single();
+  }
+  if(res.error){
+    console.error('Erro empresa:',res.error);
+    setSyncStatus('error');
+    toast('Erro: '+res.error.message,'var(--red)');
+    return null;
+  }
+  setSyncStatus('ok');return res.data;
+}
+async function dbExcluirEmpresa(id){
+  await sbClient.from('empresas').delete().eq('id',id);
+}
+
+// CRUD FUNCIONÁRIOS
+async function dbSalvarFuncionario(func){
+  setSyncStatus('syncing');
+  const {id_db,...dados}=func;
+  delete dados.id;delete dados.created_at;
+  let res;
+  if(id_db){
+    res=await sbClient.from('funcionarios').update(dados).eq('id',id_db).select().single();
+  } else {
+    res=await sbClient.from('funcionarios').insert(dados).select().single();
+  }
+  if(res.error){
+    console.error('Erro funcionário:',res.error);
+    setSyncStatus('error');
+    toast('Erro: '+res.error.message,'var(--red)');
+    return null;
+  }
+  setSyncStatus('ok');return res.data;
+}
+async function dbExcluirFuncionario(id){
+  await sbClient.from('funcionarios').delete().eq('id',id);
+}
+
+// CRUD RESCISÕES
+async function dbSalvarRescisao(rct){
+  setSyncStatus('syncing');
+  const payload={
+    nome_funcionario:rct.nomeFuncionario,cpf_funcionario:rct.cpfFuncionario,
+    nome_empresa:rct.nomeEmpresa,cnpj_empresa:rct.cnpjEmpresa,
+    tipo:rct.tipoNome,demissao:rct.demissao,
+    total_creditos:rct.totalCreditos,total_debitos:rct.totalDebitos,liquido:rct.liquido,
+    dados:rct,
+  };
+  const {data,error}=await sbClient.from('rescisoes').insert(payload).select().single();
+  if(error){setSyncStatus('error');toast('Erro ao salvar rescisão','var(--red)');return null;}
+  setSyncStatus('ok');return data;
+}
+async function dbAtualizarRescisao(id,rct){
+  setSyncStatus('syncing');
+  const payload={
+    nome_funcionario:rct.nomeFuncionario,cpf_funcionario:rct.cpfFuncionario,
+    nome_empresa:rct.nomeEmpresa,cnpj_empresa:rct.cnpjEmpresa,
+    tipo:rct.tipoNome,demissao:rct.demissao,
+    total_creditos:rct.totalCreditos,total_debitos:rct.totalDebitos,liquido:rct.liquido,
+    dados:rct,
+  };
+  const {data,error}=await sbClient.from('rescisoes').update(payload).eq('id',id).select().single();
+  if(error){setSyncStatus('error');toast('Erro ao atualizar rescisão','var(--red)');return null;}
+  setSyncStatus('ok');return data;
+}
+async function dbExcluirRescisao(id){
+  await sbClient.from('rescisoes').delete().eq('id',id);
+}
+
+// ============================================================
+// TOAST / LOADING / HELPERS
+// ============================================================
+function toast(msg,c){const t=R('toast');t.textContent=msg;t.style.background=c||'var(--bg3)';t.style.borderColor=c?'transparent':'var(--border2)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function R(id){return document.getElementById(id);}
+function fmtR(v){return(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function pBRL(s){return parseFloat((s||'0').toString().replace(/\./g,'').replace(',','.'))||0;}
+function fmtD(iso){return iso?new Date(iso+'T12:00:00').toLocaleDateString('pt-BR'):'';}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtMoeda(v){return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showLoading(msg){const o=R('loading-overlay');o.classList.add('show');R('loading-msg').textContent=msg||'Salvando...';}
+function hideLoading(){R('loading-overlay').classList.remove('show');}
+
+// MÁSCARAS
+function maiusculas(el){const p=el.selectionStart;el.value=el.value.toUpperCase();el.setSelectionRange(p,p);}
+function mascararSalario(el){let v=el.value.replace(/\D/g,'');if(!v){el.value='';return;}v=(parseInt(v)/100).toFixed(2);v=v.replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');el.value=v;}
+function mascararCEP(el){let v=el.value.replace(/\D/g,'').slice(0,8);if(v.length>5)v=v.replace(/(\d{5})(\d{0,3})/,'$1-$2');el.value=v;}
+function mascararCPF(el){let v=el.value.replace(/\D/g,'').slice(0,11);if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');else if(v.length>3)v=v.replace(/(\d{3})(\d{0,3})/,'$1.$2');el.value=v;}
+function mascararCNPJCPF(el){let v=el.value.replace(/\D/g,'');if(v.length<=11){if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');else if(v.length>3)v=v.replace(/(\d{3})(\d{0,3})/,'$1.$2');}else{v=v.slice(0,14);v=v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/,'$1.$2.$3/$4-$5');}el.value=v;}
+function mascararRG(el){let v=el.value.replace(/\D/g,'').slice(0,9);if(v.length>8)v=v.replace(/(\d{2})(\d{3})(\d{3})(\d)/,'$1.$2.$3-$4');else if(v.length>5)v=v.replace(/(\d{2})(\d{3})(\d{0,3})/,'$1.$2.$3');else if(v.length>2)v=v.replace(/(\d{2})(\d{0,3})/,'$1.$2');el.value=v;}
+function mascararTel(el){let v=el.value.replace(/\D/g,'').slice(0,11);if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');else if(v.length>6)v=v.replace(/(\d{2})(\d{4,5})(\d{0,4})/,'($1) $2-$3');else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,'($1) $2');el.value=v;}
+
+// ============================================================
+// NAV
+// ============================================================
+const TABS=['dashboard','empresas','funcionarios','rescisoes','nova','config'];
+function go(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  R('sec-'+id).classList.add('active');
+  const i=TABS.indexOf(id);if(i>=0)document.querySelectorAll('nav button')[i].classList.add('active');
+  if(id==='dashboard')renderDashboard();
+  if(id==='empresas')renderEmpresas();
+  if(id==='funcionarios'){renderFuncionarios();populaSelectEmpresas('func-empresa');populaSelectEmpresas('filtro-emp-func');}
+  if(id==='rescisoes'){renderRescisoes();populaSelectEmpresas('filtro-emp-rct');}
+  if(id==='nova'){populaSelectEmpresas('rct-empresa');R('rct-func').innerHTML='<option value="">— Selecione primeiro a empresa —</option>';renderTipos();}
+  if(id==='config')carregarCfg();
+}
+function fModal(id){R(id).classList.remove('open');}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const tR=db.rescisoes.length,tE=db.empresas.length,tF=db.funcionarios.length,tL=db.rescisoes.reduce((s,r)=>s+(r.liquido||0),0);
+  R('stats-row').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Rescisões</div><div class="stat-value">${tR}</div><div class="stat-sub">registradas</div></div>
+    <div class="stat-card"><div class="stat-label">Empresas</div><div class="stat-value">${tE}</div><div class="stat-sub">cadastradas</div></div>
+    <div class="stat-card"><div class="stat-label">Funcionários</div><div class="stat-value">${tF}</div><div class="stat-sub">cadastrados</div></div>
+    <div class="stat-card"><div class="stat-label">Total líquido pago</div><div class="stat-value" style="font-size:1rem;color:var(--accent2)">${fmtR(tL)}</div><div class="stat-sub">em rescisões</div></div>`;
+  R('dash-recentes').innerHTML=db.rescisoes.slice(0,5).length
+    ?`<table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Líquido</th></tr></thead><tbody>${db.rescisoes.slice(0,5).map(r=>`<tr><td>${esc(r.nomeFuncionario||r.nome_funcionario||'')}</td><td><span class="badge bdg-b" style="font-size:.66rem">${r.tipoNome||r.tipo||''}</span></td><td style="color:var(--green2);font-weight:600">${fmtR(r.liquido||0)}</td></tr>`).join('')}</tbody></table>`
+    :'<div class="empty"><div class="empty-icon">📋</div><p>Nenhuma rescisão ainda.</p></div>';
+  const pt={};db.rescisoes.forEach(r=>{const k=r.tipoNome||r.tipo||'Outros';pt[k]=(pt[k]||0)+1;});
+  R('dash-tipos').innerHTML=Object.entries(pt).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:.84rem"><span style="color:var(--text2)">${k}</span><strong style="color:var(--white)">${v}</strong></div>`).join('')||'<div class="empty"><div class="empty-icon">📊</div><p>Sem dados.</p></div>';
+}
+
+// ============================================================
+// EMPRESAS
+// ============================================================
+async function salvarEmpresa(){
+  const nome=R('emp-nome').value.trim();
+  if(!nome){toast('Informe o nome');return;}
+  showLoading('Salvando empresa...');
+  const idEx=R('emp-id').value;
+  const rua=R('emp-rua')?.value||'',num=R('emp-num')?.value||'',comp=R('emp-comp')?.value||'';
+  const bairro=R('emp-bairro')?.value||'',cidade=R('emp-cidade')?.value||'',uf=R('emp-uf')?.value||'',cep=R('emp-cep')?.value||'';
+  const partes=[rua+(num?', '+num:'')+(comp?' — '+comp:''),bairro,cidade+(uf?' / '+uf:''),cep?'CEP: '+cep:''].filter(Boolean);
+  const endereco=partes.join(' — ');
+  const emp={nome,cnpj:R('emp-cnpj').value,endereco,tel:R('emp-tel').value,email:R('emp-email').value,responsavel:R('emp-resp').value,convencao:R('emp-conv').value};
+  if(idEx)emp.id_db=idEx;
+  const resultado=await dbSalvarEmpresa(emp);
+  if(resultado){
+    if(idEx){db.empresas=db.empresas.map(e=>e.id==idEx?resultado:e);}
+    else{db.empresas.push(resultado);db.empresas.sort((a,b)=>a.nome.localeCompare(b.nome));}
+    toast('Empresa salva!','var(--green)');limparEmpresa();renderEmpresas();
+  }
+  hideLoading();
+}
+function limparEmpresa(){
+  ['emp-id','emp-nome','emp-cnpj','emp-tel','emp-email','emp-resp','emp-conv','emp-rua','emp-num','emp-comp','emp-bairro','emp-cidade','emp-uf','emp-cep'].forEach(id=>{const e=R(id);if(e)e.value='';});
+  R('titulo-form-emp').textContent='Cadastrar empresa';
+}
+function cancelarEmpresa(){limparEmpresa();}
+function editarEmpresa(id){
+  const e=db.empresas.find(x=>x.id==id);if(!e)return;
+  R('emp-id').value=e.id;R('emp-nome').value=e.nome;R('emp-cnpj').value=e.cnpj||'';
+  R('emp-tel').value=e.tel||'';R('emp-email').value=e.email||'';
+  R('emp-resp').value=e.responsavel||'';R('emp-conv').value=e.convencao||'';
+  // Preenche endereço — parseia o campo composto
+  const end=e.endereco||'';
+  const partes=end.split(' — ');
+  const ruanum=(partes[0]||'').split(', ');
+  if(R('emp-rua'))R('emp-rua').value=ruanum[0]||'';
+  if(R('emp-num'))R('emp-num').value=ruanum[1]||'';
+  if(R('emp-comp'))R('emp-comp').value=ruanum[2]||'';
+  if(R('emp-bairro'))R('emp-bairro').value=partes[1]||'';
+  const ciduf=(partes[2]||'').split(' / ');
+  if(R('emp-cidade'))R('emp-cidade').value=ciduf[0]||'';
+  if(R('emp-uf'))R('emp-uf').value=ciduf[1]||'';
+  if(R('emp-cep'))R('emp-cep').value=(partes[3]||'').replace('CEP: ','');
+  R('titulo-form-emp').textContent='Editar empresa';R('form-empresa-card').scrollIntoView({behavior:'smooth'});
+}
+async function excluirEmpresa(id){
+  if(!confirm('Excluir esta empresa?'))return;
+  await dbExcluirEmpresa(id);
+  db.empresas=db.empresas.filter(e=>e.id!=id);renderEmpresas();
+}
+function renderEmpresas(){
+  const busca=(R('busca-emp').value||'').toLowerCase();
+  const lista=db.empresas.filter(e=>!busca||e.nome.toLowerCase().includes(busca)||(e.cnpj||'').includes(busca));
+  const el=R('lista-empresas');
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏢</div><p>Nenhuma empresa cadastrada.</p></div>';return;}
+  el.innerHTML=`<table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Endereço</th><th>Funcionários</th><th></th></tr></thead><tbody>
+    ${lista.map(e=>{const nF=db.funcionarios.filter(f=>f.empresa_id==e.id||f.empresaId==e.id).length;
+    return`<tr><td><strong style="color:var(--text)">${esc(e.nome)}</strong>${e.convencao?`<br><span style="font-size:.72rem;color:var(--text3)">${esc(e.convencao)}</span>`:''}</td>
+    <td>${e.cnpj||'—'}</td><td style="font-size:.78rem;color:var(--text3)">${e.endereco||'—'}</td>
+    <td><span class="badge bdg-b">${nF}</span></td>
+    <td style="white-space:nowrap"><button class="btn btn-o btn-sm" onclick="editarEmpresa('${e.id}')">Editar</button><button class="btn btn-d" onclick="excluirEmpresa('${e.id}')" style="margin-left:4px">Excluir</button></td></tr>`;}).join('')}
+  </tbody></table>`;
+}
+function populaSelectEmpresas(id){
+  const s=R(id);if(!s)return;
+  const cur=s.value,isF=id.startsWith('filtro');
+  s.innerHTML=(isF?'<option value="">Todas</option>':'<option value="">— Selecione a empresa —</option>')+db.empresas.map(e=>`<option value="${e.id}">${esc(e.nome)}</option>`).join('');
+  if(cur)s.value=cur;
+}
+
+// ============================================================
+// FUNCIONÁRIOS
+// ============================================================
+async function salvarFuncionario(){
+  const nome=R('func-nome').value.trim();
+  if(!nome){toast('Informe o nome');return;}
+  showLoading('Salvando funcionário...');
+  const idEx=R('func-id').value;
+  const empId=R('func-empresa').value;
+  const rua=R('func-rua')?.value||'',num=R('func-num')?.value||'',comp=R('func-comp')?.value||'';
+  const bairro=R('func-bairro')?.value||'',cidade=R('func-cidade')?.value||'',uf=R('func-uf')?.value||'',cep=R('func-cep')?.value||'';
+  const partes=[rua+(num?', '+num:'')+(comp?' — '+comp:''),bairro,cidade+(uf?' / '+uf:''),cep?'CEP: '+cep:''].filter(Boolean);
+  const endereco=partes.join(' — ');
+  const func={nome,cpf:R('func-cpf').value,rg:R('func-rg').value,empresa_id:empId||null,
+    cargo:R('func-cargo').value,admissao:R('func-admissao').value||null,
+    salario:R('func-salario').value,jornada:R('func-jornada').value,
+    pis:R('func-pis').value,ctps:R('func-ctps').value,endereco};
+  if(idEx)func.id_db=idEx;
+  const resultado=await dbSalvarFuncionario(func);
+  if(resultado){
+    if(idEx){db.funcionarios=db.funcionarios.map(f=>f.id==idEx?resultado:f);}
+    else{db.funcionarios.push(resultado);db.funcionarios.sort((a,b)=>a.nome.localeCompare(b.nome));}
+    toast('Funcionário salvo!','var(--green)');limparFuncionario();renderFuncionarios();
+  }
+  hideLoading();
+}
+function limparFuncionario(){
+  ['func-id','func-nome','func-cpf','func-rg','func-cargo','func-admissao','func-salario','func-pis','func-ctps',
+   'func-rua','func-num','func-comp','func-bairro','func-cidade','func-uf','func-cep'].forEach(id=>{const e=R(id);if(e)e.value='';});
+  R('func-jornada').value='44';R('func-empresa').value='';R('titulo-form-func').textContent='Cadastrar funcionário';
+}
+function cancelarFuncionario(){limparFuncionario();}
+function editarFuncionario(id){
+  const f=db.funcionarios.find(x=>x.id==id);if(!f)return;
+  populaSelectEmpresas('func-empresa');
+  R('func-id').value=f.id;R('func-nome').value=f.nome;R('func-cpf').value=f.cpf||'';R('func-rg').value=f.rg||'';
+  R('func-empresa').value=f.empresa_id||f.empresaId||'';R('func-cargo').value=f.cargo||'';
+  R('func-admissao').value=f.admissao||'';R('func-salario').value=f.salario||'';
+  R('func-jornada').value=f.jornada||'44';R('func-pis').value=f.pis||'';R('func-ctps').value=f.ctps||'';
+  // Preenche endereço — tenta campos separados primeiro, depois parseia o campo composto
+  const end=f.endereco||'';
+  const partes=end.split(' — ');
+  // parte 0: rua+num, parte 1: bairro, parte 2: cidade/UF, parte 3: CEP
+  const ruanum=(partes[0]||'').split(', ');
+  if(R('func-rua'))R('func-rua').value=ruanum[0]||'';
+  if(R('func-num'))R('func-num').value=ruanum[1]||'';
+  if(R('func-comp'))R('func-comp').value=ruanum[2]||'';
+  if(R('func-bairro'))R('func-bairro').value=partes[1]||'';
+  const ciduf=(partes[2]||'').split(' / ');
+  if(R('func-cidade'))R('func-cidade').value=ciduf[0]||'';
+  if(R('func-uf'))R('func-uf').value=ciduf[1]||'';
+  if(R('func-cep'))R('func-cep').value=(partes[3]||'').replace('CEP: ','');
+  R('titulo-form-func').textContent='Editar funcionário';
+  R('form-func-card').scrollIntoView({behavior:'smooth'});
+}
+async function excluirFuncionario(id){
+  if(!confirm('Excluir este funcionário?'))return;
+  await dbExcluirFuncionario(id);db.funcionarios=db.funcionarios.filter(f=>f.id!=id);renderFuncionarios();
+}
+function renderFuncionarios(){
+  const busca=(R('busca-func').value||'').toLowerCase();
+  const fEmp=R('filtro-emp-func').value||'';
+  const lista=db.funcionarios.filter(f=>{
+    const okB=!busca||f.nome.toLowerCase().includes(busca)||(f.cpf||'').includes(busca)||(f.cargo||'').toLowerCase().includes(busca);
+    const okE=!fEmp||(f.empresa_id||f.empresaId)==fEmp;
+    return okB&&okE;
+  });
+  const el=R('lista-funcionarios');
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>Nenhum funcionário.</p></div>';return;}
+  el.innerHTML=`<table><thead><tr><th>Nome</th><th>CPF</th><th>Cargo</th><th>Empresa</th><th>Admissão</th><th>Salário</th><th></th></tr></thead><tbody>
+    ${lista.map(f=>{const emp=db.empresas.find(e=>e.id==(f.empresa_id||f.empresaId));
+    return`<tr><td><strong style="color:var(--text)">${esc(f.nome)}</strong></td>
+    <td style="font-size:.8rem">${f.cpf||'—'}</td><td>${esc(f.cargo||'—')}</td>
+    <td style="font-size:.8rem">${emp?esc(emp.nome):'—'}</td>
+    <td style="font-size:.8rem">${fmtD(f.admissao)}</td>
+    <td style="font-weight:600;color:var(--accent2)">${f.salario?fmtR(pBRL(f.salario)):'—'}</td>
+    <td style="white-space:nowrap"><button class="btn btn-o btn-sm" onclick="editarFuncionario('${f.id}')">Editar</button><button class="btn btn-d" onclick="excluirFuncionario('${f.id}')" style="margin-left:4px">Excluir</button></td></tr>`;}).join('')}
+  </tbody></table>`;
+}
+
+// ============================================================
+// TIPOS E VERBAS
+// ============================================================
+const TIPOS_RCT=[
+  {id:'sjc',nome:'Sem Justa Causa',icon:'🔴',desc:'Iniciativa do empregador',
+   creditos:['saldo','aviso_indenizado','ferias_prop','ferias_venc','ferias_aviso','ter_ferias','decimo_prop','decimo_aviso','fgts','multa_fgts'],debitos:['inss','inss_13','contrib_assist']},
+  {id:'pd',nome:'Pedido de Demissão',icon:'🟡',desc:'Iniciativa do empregado',
+   creditos:['saldo','ferias_prop','ferias_venc','ter_ferias','decimo_prop'],debitos:['aviso_desc','inss','inss_13']},
+  {id:'jc',nome:'Justa Causa',icon:'⛔',desc:'Falta grave do empregado',
+   creditos:['saldo'],debitos:['inss']},
+  {id:'acordo',nome:'Rescisão por Acordo',icon:'🤝',desc:'Art. 484-A CLT',
+   creditos:['saldo','aviso_indenizado_50','ferias_prop','ferias_venc','ferias_aviso_50','ter_ferias','decimo_prop','fgts','multa_fgts_20'],debitos:['inss','inss_13','contrib_assist']},
+  {id:'term',nome:'Término de Contrato',icon:'📅',desc:'Contrato a prazo determinado',
+   creditos:['saldo','ferias_prop','ferias_venc','ter_ferias','decimo_prop','fgts','multa_fgts_50','indeniz_art479'],debitos:['inss','inss_13']},
+  {id:'morte',nome:'Morte do Empregado',icon:'🕊️',desc:'Rescisão por falecimento',
+   creditos:['saldo','ferias_prop','ferias_venc','ter_ferias','decimo_prop','fgts'],debitos:[]},
+];
+const VERBAS_CAT={
+  saldo:{nome:'Saldo de Salário'},aviso_indenizado:{nome:'Aviso Prévio Indenizado'},aviso_indenizado_50:{nome:'Aviso Prévio Indenizado (50%)'},
+  ferias_prop:{nome:'Férias Proporcionais'},ferias_venc:{nome:'Férias Vencidas (não gozadas)'},
+  ferias_aviso:{nome:'Férias sobre Aviso Indenizado'},ferias_aviso_50:{nome:'Férias s/ Aviso (50%)'},
+  ter_ferias:{nome:'1/3 Constitucional de Férias'},decimo_prop:{nome:'13º Salário Proporcional'},
+  decimo_aviso:{nome:'13º sobre Aviso Indenizado'},fgts:{nome:'FGTS do Mês Rescisório'},
+  multa_fgts:{nome:'Multa FGTS (40%)'},multa_fgts_20:{nome:'Multa FGTS (20% – Acordo)'},multa_fgts_50:{nome:'Indenização FGTS (50%)'},
+  indeniz_art479:{nome:'Indenização Art. 479 CLT'},
+  inss:{nome:'INSS — Previdência Social'},inss_13:{nome:'INSS sobre 13º Salário'},
+  contrib_assist:{nome:'Contribuição Assistencial (Conv. Coletiva)'},
+  aviso_desc:{nome:'Desconto — Aviso Prévio não Cumprido'},
+};
+const TABELA_INSS=[{ate:1518,aliq:.075},{ate:2793.88,aliq:.09},{ate:4190.83,aliq:.12},{ate:8157.41,aliq:.14}];
+function calcINSS(sal){let d=0,ant=0;for(const f of TABELA_INSS){if(sal<=0)break;const t=f.ate-ant,p=Math.min(sal,t);d+=p*f.aliq;sal-=t;ant=f.ate;if(sal+ant<=f.ate)break;}return Math.round(d*100)/100;}
+
+function numExtenso(v){
+  const n=['','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+  const d=['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+  const c=['','cem','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+  function g(x){if(!x)return'';if(x===100)return'cem';let r='';const cc=Math.floor(x/100),r2=x%100;if(cc)r+=c[cc];if(cc&&r2)r+=' e ';if(r2<20&&r2>0)r+=n[r2];else if(r2>=20){r+=d[Math.floor(r2/10)];if(r2%10)r+=' e '+n[r2%10];}return r;}
+  const re=Math.floor(v),ct=Math.round((v-re)*100);let t='';
+  if(re>=1000){const m=Math.floor(re/1000),r=re%1000;t+=g(m)+(m===1?' mil':' mil');if(r)t+=(r<100?' e ':' ')+g(r);}else if(re)t+=g(re);
+  if(re)t+=(re===1?' real':' reais');if(ct){if(re)t+=' e ';t+=g(ct)+(ct===1?' centavo':' centavos');}
+  return t?t.charAt(0).toUpperCase()+t.slice(1):'Zero';
+}
+
+// NOVA RCT
+let tipoSelecionado=null,creditosRct=[],debitosRct=[],avisoTipo='indenizado';
+function renderTipos(){
+  R('tipo-grid').innerHTML=TIPOS_RCT.map(t=>`<div class="tipo-card${tipoSelecionado===t.id?' selected':''}" onclick="selecionarTipo('${t.id}')">
+    <div class="tipo-icon">${t.icon}</div><div class="tipo-nome">${t.nome}</div><div class="tipo-desc">${t.desc}</div></div>`).join('');
+}
+function selecionarTipo(id){tipoSelecionado=id;renderTipos();recalcularVerbas();}
+function selecionarAviso(tipo,semRecalcular){
+  avisoTipo=tipo;
+  R('aviso-opt-trab').className='aviso-opt'+(tipo==='trabalhado'?' sel-trab':'');
+  R('aviso-opt-ind').className='aviso-opt'+(tipo==='indenizado'?' sel-ind':'');
+  R('aviso-info').textContent=tipo==='trabalhado'?'Aviso trabalhado: funcionário cumpre o período, não gera crédito de aviso.':'Aviso indenizado: empresa paga sem cumprimento, gera crédito nas verbas.';
+  if(!semRecalcular)recalcularVerbas();
+}
+function onEmpresaRctChange(){
+  const empId=R('rct-empresa').value;
+  const s=R('rct-func');
+  if(!empId){s.innerHTML='<option value="">— Selecione primeiro a empresa —</option>';return;}
+  const funcs=db.funcionarios.filter(f=>(f.empresa_id||f.empresaId)==empId);
+  s.innerHTML='<option value="">— Selecione o funcionário —</option>'+funcs.map(f=>`<option value="${f.id}">${esc(f.nome)}${f.cpf?' — '+f.cpf:''}</option>`).join('');
+  if(!funcs.length)s.innerHTML='<option value="">Nenhum funcionário nesta empresa</option>';
+}
+function preencherFuncionario(){
+  const id=R('rct-func').value;
+  const f=db.funcionarios.find(x=>x.id==id);if(!f)return;
+  R('rct-nome').value=f.nome;R('rct-cpf').value=f.cpf||'';R('rct-cargo').value=f.cargo||'';
+  R('rct-admissao').value=f.admissao||'';R('rct-salario').value=f.salario||'';
+  calcularPeriodo();recalcularVerbas();
+}
+function calcularPeriodo(){
+  const adm=R('rct-admissao').value,dem=R('rct-demissao').value;
+  if(!adm||!dem){R('periodo-info').textContent='';return;}
+  const dA=new Date(adm+'T12:00:00'),dD=new Date(dem+'T12:00:00'),diff=dD-dA;
+  const anos=Math.floor(diff/(365.25*24*3600*1000));
+  const meses=Math.floor((diff%(365.25*24*3600*1000))/(30.44*24*3600*1000));
+  const dias=Math.floor((diff%(30.44*24*3600*1000))/(24*3600*1000));
+  const tm=anos*12+meses+(dias>=15?1:0);const avos=Math.min(tm,12);
+  const diasAviso=Math.min(30+(anos+(meses>=6?1:0))*3,90);
+  R('periodo-info').innerHTML=`Tempo: <strong style="color:var(--accent2)">${anos}a ${meses}m ${dias}d</strong> &nbsp;|&nbsp; Avos: <strong style="color:var(--green2)">${avos}/12</strong> &nbsp;|&nbsp; Aviso: <strong style="color:var(--green2)">${diasAviso} dias</strong>`;
+  if(!R('rct-avos13').value)R('rct-avos13').value=avos;
+  if(!R('rct-avosfer').value)R('rct-avosfer').value=avos;
+  if(!R('rct-dias-aviso').value)R('rct-dias-aviso').value=diasAviso;
+  recalcularVerbas();
+}
+function recalcularVerbas(){
+  if(!tipoSelecionado)return;
+  const tipo=TIPOS_RCT.find(t=>t.id===tipoSelecionado);if(!tipo)return;
+  const sal=pBRL(R('rct-salario').value||'0'),salDia=sal/30;
+  const avos13=parseInt(R('rct-avos13').value)||0,avosFer=parseInt(R('rct-avosfer').value)||0;
+  const diasTrab=parseInt(R('rct-dias').value)||0,diasAviso=parseInt(R('rct-dias-aviso').value)||30;
+  const ferVenc=parseInt(R('rct-fer-venc').value)||0;
+  const avisoInd=(avisoTipo==='indenizado');
+  const fpInfo=avosFer?`${avosFer}/12 × ${fmtR(sal)} = ${fmtR(Math.round((sal/12)*avosFer*100)/100)}`:'Preencha avos de férias';
+  if(R('rct-fer-prop-info'))R('rct-fer-prop-info').value=fpInfo;
+  const vSaldo=salDia*diasTrab,vAvisoInd=avisoInd?salDia*diasAviso:0;
+  const vFerProp=(sal/12)*avosFer,vFerVenc=(sal/30)*ferVenc;
+  const vFerAviso=avisoInd?(sal/12)*(diasAviso/30):0;
+  const v13Prop=(sal/12)*avos13,v13Aviso=avisoInd?(sal/12)*(diasAviso/30):0;
+  const vFGTS=sal*0.08,vMul40=sal*8*0.4,vMul20=sal*8*0.2,vMul50=sal*8*0.5;
+  const vTerFer=(vFerProp+(ferVenc>0?vFerVenc:0)+(avisoInd&&tipo.creditos.includes('ferias_aviso')?vFerAviso:0))/3;
+  const mv={
+    saldo:{val:vSaldo,ref:`${diasTrab} dias`},aviso_indenizado:{val:vAvisoInd,ref:`${diasAviso} dias`},aviso_indenizado_50:{val:vAvisoInd*0.5,ref:`${diasAviso}d / 50%`},
+    ferias_prop:{val:vFerProp,ref:`${avosFer}/12 avos`},ferias_venc:{val:vFerVenc,ref:ferVenc?`${ferVenc} dias`:'—'},
+    ferias_aviso:{val:vFerAviso,ref:`Aviso ${diasAviso}d`},ferias_aviso_50:{val:vFerAviso*0.5,ref:'Aviso 50%'},
+    ter_ferias:{val:vTerFer,ref:'1/3 s/ férias'},decimo_prop:{val:v13Prop,ref:`${avos13}/12 avos`},decimo_aviso:{val:v13Aviso,ref:`Aviso ${diasAviso}d`},
+    fgts:{val:vFGTS,ref:'8% salário'},multa_fgts:{val:vMul40,ref:'40% FGTS'},multa_fgts_20:{val:vMul20,ref:'20% FGTS'},multa_fgts_50:{val:vMul50,ref:'50% FGTS'},
+    indeniz_art479:{val:sal*0.5,ref:'Art.479 CLT'},
+    inss:{val:calcINSS(vSaldo+(avisoInd?vAvisoInd:0)+vFerProp+vFerVenc),ref:'Tabela progressiva'},
+    inss_13:{val:calcINSS(v13Prop+(avisoInd?v13Aviso:0)),ref:'Sobre 13º'},
+    contrib_assist:{val:0,ref:'Conv. Coletiva'},aviso_desc:{val:!avisoInd?salDia*diasAviso:0,ref:`${diasAviso} dias`},
+  };
+  const filtC=k=>avisoInd||!['aviso_indenizado','aviso_indenizado_50','ferias_aviso','ferias_aviso_50','decimo_aviso'].includes(k);
+  creditosRct=tipo.creditos.filter(filtC).map(k=>({id:k,nome:VERBAS_CAT[k]?.nome||k,ref:(mv[k]||{}).ref||'',val:fmtMoeda(Math.round(((mv[k]||{}).val||0)*100)/100)}));
+  debitosRct=tipo.debitos.map(k=>({id:k,nome:VERBAS_CAT[k]?.nome||k,ref:(mv[k]||{}).ref||'',val:fmtMoeda(Math.round(((mv[k]||{}).val||0)*100)/100)}));
+  renderVerbas();
+}
+function renderVerbas(){
+  renderListaVerbas('lista-creditos',creditosRct,'credito');
+  renderListaVerbas('lista-debitos',debitosRct,'debito');calcTotais();
+}
+function renderListaVerbas(elId,lista,tipo){
+  const el=R(elId);el.innerHTML='';
+  lista.forEach((v,i)=>{
+    const d=document.createElement('div');d.className='verba-row';
+    d.innerHTML=`<input type="text" value="${esc(v.nome)}" placeholder="Nome da verba" onchange="${tipo}sRct[${i}].nome=this.value">
+      <input type="text" value="${esc(v.ref||'')}" placeholder="Ref." onchange="${tipo}sRct[${i}].ref=this.value" style="text-align:center;font-size:.77rem">
+      <input type="text" value="${v.val}" placeholder="0,00" oninput="${tipo}sRct[${i}].val=this.value;calcTotais()" style="text-align:right;font-weight:600;color:${tipo==='credito'?'var(--green2)':'var(--red2)'}">
+      <button class="rm-btn" onclick="remVerba('${tipo}',${i})">×</button>`;
+    el.appendChild(d);
+  });
+}
+function remVerba(tipo,i){if(tipo==='credito')creditosRct.splice(i,1);else debitosRct.splice(i,1);renderVerbas();}
+function addVerba(tipo){if(tipo==='credito')creditosRct.push({nome:'',ref:'',val:'0,00'});else debitosRct.push({nome:'',ref:'',val:'0,00'});renderVerbas();}
+function calcTotais(){
+  const totC=creditosRct.reduce((s,v)=>s+pBRL(v.val),0);
+  const totD=debitosRct.reduce((s,v)=>s+pBRL(v.val),0);
+  const liq=totC-totD;
+  R('tot-creditos').textContent=fmtR(totC);R('tot-debitos').textContent=fmtR(totD);R('tot-liquido').textContent=fmtR(liq);
+  const ci=R('tot-cred-inline');if(ci)ci.textContent=fmtR(totC);
+  const di=R('tot-desc-inline');if(di)di.textContent=fmtR(totD);
+  return{totC,totD,liq};
+}
+
+let _editandoRctId=null; // ID da rescisão sendo editada (null = nova)
+
+async function gravarRct(){
+  const r=buildRct();if(!r)return;
+  showLoading('Salvando rescisão...');
+  if(_editandoRctId){
+    // ATUALIZA a rescisão existente
+    const resultado=await dbAtualizarRescisao(_editandoRctId,r);
+    if(resultado){
+      db.rescisoes=db.rescisoes.map(x=>x.id==_editandoRctId?{...x,...r,...resultado,id:_editandoRctId}:x);
+      const b=R('banner-nova');b.className='banner banner-ok show';
+      b.innerHTML=`✅ Rescisão de <strong>${r.nomeFuncionario}</strong> atualizada com sucesso!`;
+      setTimeout(()=>b.classList.remove('show'),5000);
+      _editandoRctId=null;limparRct();toast('Rescisão atualizada!','var(--green)');
+    }
+  } else {
+    // CRIA nova rescisão
+    const resultado=await dbSalvarRescisao(r);
+    if(resultado){
+      db.rescisoes.unshift({...r,...resultado,id:resultado.id});
+      const b=R('banner-nova');b.className='banner banner-ok show';
+      b.innerHTML=`✅ Rescisão de <strong>${r.nomeFuncionario}</strong> gravada com sucesso!`;
+      setTimeout(()=>b.classList.remove('show'),5000);
+      limparRct();toast('Rescisão gravada!','var(--green)');
+    }
+  }
+  hideLoading();
+}
+async function gravarEVisualizarRct(){
+  const r=buildRct();if(!r)return;
+  showLoading('Salvando...');
+  if(_editandoRctId){
+    const resultado=await dbAtualizarRescisao(_editandoRctId,r);
+    if(resultado){
+      db.rescisoes=db.rescisoes.map(x=>x.id==_editandoRctId?{...x,...r,...resultado,id:_editandoRctId}:x);
+      _editandoRctId=null;limparRct();abrirReciboRct(r);
+    }
+  } else {
+    const resultado=await dbSalvarRescisao(r);
+    if(resultado){db.rescisoes.unshift({...r,...resultado,id:resultado.id});abrirReciboRct(r);}
+    limparRct();
+  }
+  hideLoading();
+}
+function buildRct(){
+  if(!tipoSelecionado){toast('Selecione o tipo de rescisão');return null;}
+  const nome=R('rct-nome').value.trim();
+  if(!nome){toast('Informe o nome do funcionário');return null;}
+  const{totC,totD,liq}=calcTotais();
+  const tipo=TIPOS_RCT.find(t=>t.id===tipoSelecionado);
+  const empId=R('rct-empresa').value;
+  const emp=db.empresas.find(e=>e.id==empId);
+  const funcSel=db.funcionarios.find(f=>f.id==R('rct-func').value);
+  return{id:Date.now(),tipo:tipoSelecionado,tipoNome:tipo?.nome||tipoSelecionado,
+    nomeFuncionario:nome,cpfFuncionario:R('rct-cpf').value,cargo:R('rct-cargo').value,
+    admissao:R('rct-admissao').value,demissao:R('rct-demissao').value,salario:R('rct-salario').value,
+    avisoTipo,empresaId:empId,nomeEmpresa:emp?.nome||'',cnpjEmpresa:emp?.cnpj||'',
+    endEmpresa:emp?.endereco||'',endFuncionario:funcSel?.endereco||'',
+    creditos:JSON.parse(JSON.stringify(creditosRct)),debitos:JSON.parse(JSON.stringify(debitosRct)),
+    totalCreditos:totC,totalDebitos:totD,liquido:liq,
+    obs:R('rct-obs').value,cfg:JSON.parse(JSON.stringify(db.config)),
+  };
+}
+function limparRct(){
+  tipoSelecionado=null;creditosRct=[];debitosRct=[];avisoTipo='indenizado';_editandoRctId=null;
+  ['rct-func','rct-nome','rct-cpf','rct-cargo','rct-admissao','rct-demissao','rct-salario','rct-avos13','rct-avosfer','rct-dias','rct-dias-aviso','rct-fer-venc','rct-fer-venc-periodo','rct-obs','rct-empresa'].forEach(id=>{const e=R(id);if(e)e.value='';});
+  R('periodo-info').textContent='';R('aviso-opt-trab').className='aviso-opt';R('aviso-opt-ind').className='aviso-opt';R('aviso-info').textContent='';
+  renderTipos();renderVerbas();calcTotais();
+}
+
+// RESCISÕES HISTÓRICO
+function filtrarRct(){
+  const fN=(R('busca-rct').value||'').toLowerCase();
+  const fE=R('filtro-emp-rct').value||'';
+  const fT=R('filtro-tipo-rct').value||'';
+  return db.rescisoes.filter(r=>{
+    const nF=r.nomeFuncionario||r.nome_funcionario||'';
+    const eId=r.empresaId||r.empresa_id||'';
+    const tipo=r.tipoNome||r.tipo||'';
+    return(!fN||nF.toLowerCase().includes(fN)||(r.cpfFuncionario||r.cpf_funcionario||'').includes(fN))&&(!fE||eId==fE)&&(!fT||tipo===fT);
+  });
+}
+function renderRescisoes(){
+  const lista=filtrarRct();const el=R('lista-rescisoes');
+  const tot=lista.reduce((s,r)=>s+(r.liquido||0),0);
+  R('resumo-rct').innerHTML=lista.length?`<strong>${lista.length}</strong> rescisão(ões) · Líquido: <strong style="color:var(--green2)">${fmtR(tot)}</strong>`:'';
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">📁</div><p>Nenhuma rescisão.</p></div>';return;}
+  el.innerHTML=`<table><thead><tr><th>Funcionário</th><th>Empresa</th><th>Tipo</th><th>Aviso</th><th>Demissão</th><th>Créditos</th><th>Descontos</th><th>Líquido</th><th></th></tr></thead><tbody>
+    ${lista.map(r=>{
+      const nF=r.nomeFuncionario||r.nome_funcionario||'';
+      const cpf=r.cpfFuncionario||r.cpf_funcionario||'';
+      const nE=r.nomeEmpresa||r.nome_empresa||'—';
+      const tipo=r.tipoNome||r.tipo||'';
+      const av=r.avisoTipo||'';
+      const dem=r.demissao||'';
+      return`<tr>
+        <td><strong style="color:var(--text)">${esc(nF)}</strong><br><span style="font-size:.72rem;color:var(--text3)">${cpf}</span></td>
+        <td style="font-size:.8rem">${esc(nE)}</td>
+        <td><span class="badge bdg-b" style="font-size:.66rem">${tipo}</span></td>
+        <td><span class="badge ${av==='trabalhado'?'bdg-y':'bdg-b'}" style="font-size:.66rem">${av==='trabalhado'?'Trabalhado':'Indenizado'}</span></td>
+        <td style="font-size:.8rem">${fmtD(dem)}</td>
+        <td style="color:var(--green2);font-size:.82rem">${fmtR(r.totalCreditos||r.total_creditos||0)}</td>
+        <td style="color:var(--red2);font-size:.82rem">${fmtR(r.totalDebitos||r.total_debitos||0)}</td>
+        <td style="font-weight:700;color:var(--accent2)">${fmtR(r.liquido||0)}</td>
+        <td style="white-space:nowrap;display:flex;gap:4px">
+          <button class="btn btn-o btn-sm" onclick="verRct('${r.id}')">Ver</button>
+          <button class="btn btn-p btn-sm" onclick="editarRct('${r.id}')">Editar</button>
+          <button class="btn btn-d" onclick="excluirRct('${r.id}')">✕</button>
+        </td></tr>`;}).join('')}
+  </tbody></table>`;
+}
+function limparFiltrosRct(){R('busca-rct').value='';R('filtro-emp-rct').value='';R('filtro-tipo-rct').value='';renderRescisoes();}
+let _rctAbertoId=null;
+function verRct(id){
+  const r=db.rescisoes.find(x=>x.id==id);if(!r)return;
+  _rctAbertoId=id;
+  abrirReciboRct(r.dados||r,true);
+}
+function abrirReciboRct(r,mostrarEditar){
+  R('area-imp').innerHTML=html2ViasRct(r);
+  const btnEd=R('btn-editar-rct');
+  if(btnEd)btnEd.style.display=mostrarEditar?'inline-flex':'none';
+  R('m-rct').classList.add('open');
+}
+function editarRctAtual(){
+  if(!_rctAbertoId)return;
+  fModal('m-rct');
+  editarRct(_rctAbertoId);
+}
+async function excluirRct(id){
+  if(!confirm('Excluir esta rescisão?'))return;
+  await dbExcluirRescisao(id);db.rescisoes=db.rescisoes.filter(r=>r.id!=id);renderRescisoes();
+}
+function editarRct(id){
+  const rec=db.rescisoes.find(x=>x.id==id||x.id==String(id));
+  if(!rec){toast('Rescisão não encontrada');return;}
+  _editandoRctId=id; // marca que estamos editando
+  const r=rec._dados_original||rec.dados||rec;
+  const creditos=r.creditos||rec.creditos||[];
+  const debitos=r.debitos||rec.debitos||[];
+  go('nova');
+  const tipoObj=TIPOS_RCT.find(t=>t.id===(r.tipo||rec.tipo)||t.nome===(r.tipoNome||rec.tipo));
+  if(tipoObj)tipoSelecionado=tipoObj.id;
+  renderTipos();
+  populaSelectEmpresas('rct-empresa');
+  setTimeout(()=>{
+    R('rct-empresa').value=r.empresaId||r.empresa_id||rec.empresa_id||'';
+    onEmpresaRctChange();
+    setTimeout(()=>{
+      R('rct-nome').value=r.nomeFuncionario||rec.nome_funcionario||'';
+      R('rct-cpf').value=r.cpfFuncionario||rec.cpf_funcionario||'';
+      R('rct-cargo').value=r.cargo||'';
+      R('rct-admissao').value=r.admissao||rec.admissao||'';
+      R('rct-demissao').value=r.demissao||rec.demissao||'';
+      R('rct-salario').value=r.salario||'';
+      R('rct-obs').value=r.obs||'';
+      avisoTipo=r.avisoTipo||'indenizado';
+      selecionarAviso(avisoTipo,true);
+      const get=(term)=>creditos.find(v=>v.nome&&v.nome.toLowerCase().includes(term));
+      const num=(str)=>{const m=String(str||'').match(/(\d+)/);return m?m[1]:'';};
+      const numBarra=(str)=>{const m=String(str||'').match(/(\d+)\//);return m?m[1]:'';};
+      const saldoV=get('saldo');
+      const avos13V=get('13º salário')||get('13o')||get('13°')||get('13');
+      const ferPropV=get('férias proporcionais')||get('ferias proporcionais');
+      const ferVencV=get('vencida')||get('vencidas');
+      const avisoV=get('aviso prévio indenizado')||get('aviso indenizado');
+      if(saldoV)R('rct-dias').value=num(saldoV.ref);
+      if(avos13V)R('rct-avos13').value=numBarra(avos13V.ref)||num(avos13V.ref);
+      if(ferPropV)R('rct-avosfer').value=numBarra(ferPropV.ref)||num(ferPropV.ref);
+      if(ferVencV)R('rct-fer-venc').value=num(ferVencV.ref);
+      if(avisoV)R('rct-dias-aviso').value=num(avisoV.ref);
+      creditosRct=JSON.parse(JSON.stringify(creditos));
+      debitosRct=JSON.parse(JSON.stringify(debitos));
+      renderVerbas();
+      calcTotais();
+      const nomeFunc=r.nomeFuncionario||rec.nome_funcionario||'';
+      const b=R('banner-nova');
+      b.className='banner show';
+      b.style.cssText='display:flex;background:var(--gold-bg);border:1px solid var(--gold);color:var(--gold2);border-radius:9px;padding:10px 16px;margin-bottom:14px;font-size:.84rem;align-items:center;gap:8px';
+      b.innerHTML=`✏️ Editando rescisão de <strong>${esc(nomeFunc)}</strong>. Ajuste e clique em <strong>Gravar Rescisão</strong> — a original será atualizada.`;
+    },300);
+  },150);
+}
+function imprimirTodosRct(){
+  const lista=filtrarRct();if(!lista.length){toast('Nenhuma rescisão');return;}
+  R('area-todos').innerHTML=lista.map(r=>`<div class="rct-via-pg">${htmlViaRct(r.dados||r,'1ª VIA — EMPRESA')}</div><div class="rct-via-pg">${htmlViaRct(r.dados||r,'2ª VIA — FUNCIONÁRIO')}</div>`).join('');
+  R('m-todos').classList.add('open');
+}
+
+// RECIBO HTML
+function htmlViaRct(r,via){
+  const cfg=r.cfg||db.config||{};const cidade=cfg.cidade||'Itirapina';
+  const nF=r.nomeFuncionario||'',cpf=r.cpfFuncionario||'',cargo=r.cargo||'';
+  const nE=r.nomeEmpresa||'',cnpj=r.cnpjEmpresa||'',endE=r.endEmpresa||'';
+  const endF=r.endFuncionario||'';
+  const linhasC=(r.creditos||[]).map(v=>`<tr><td>${esc(v.nome)}</td><td style="text-align:center;color:#666;font-size:.74rem">${esc(v.ref||'')}</td><td style="text-align:right;color:#1b4332;font-weight:600">${v.val?'R$ '+v.val:'—'}</td></tr>`).join('');
+  const linhasD=(r.debitos||[]).map(v=>`<tr><td style="color:#7f1d1d">${esc(v.nome)}</td><td style="text-align:center;color:#666;font-size:.74rem">${esc(v.ref||'')}</td><td style="text-align:right;color:#7f1d1d;font-weight:600">${v.val?'(R$ '+v.val+')':'—'}</td></tr>`).join('');
+  const obsHtml=r.obs?`<div class="rct-obs-box"><strong>Obs:</strong> ${esc(r.obs)}</div>`:'';
+  const decl=`Declaramos, para os devidos fins, que o(a) ${esc(nF)}, portador(a) do CPF nº ${cpf}, recebeu da empresa ${esc(nE)}${cnpj?' inscrita no CNPJ nº '+cnpj:''}, a importância de ${fmtR(r.liquido||0)} (${numExtenso(r.liquido||0)}), referente à quitação de verbas rescisórias decorrentes da rescisão de seu contrato de trabalho — ${r.tipoNome||r.tipo||''}${r.avisoTipo?' — Aviso '+(r.avisoTipo==='trabalhado'?'Trabalhado':'Indenizado'):''}.`;
+  return`<div class="rct-wrap">
+    <!-- CABEÇALHO: empresa à esquerda, título à direita -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a2e;padding-bottom:12px;margin-bottom:0">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:#1a1a2e">${esc(nE||'Empresa')}</div>
+        <div style="font-size:.72rem;color:#555;margin-top:3px;line-height:1.6">${cnpj?'CNPJ: '+cnpj+'<br>':''}${esc(endE)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:20px">
+        <div style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:#1a1a2e;margin-bottom:5px">Rescisão de Contrato de Trabalho</div>
+        <div style="display:inline-block;background:#1b4332;color:#fff;border-radius:4px;padding:3px 12px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em">${r.tipoNome||r.tipo||''}</div>
+        <div style="font-size:.7rem;color:#888;margin-top:5px">${via}</div>
+      </div>
+    </div>
+    <!-- DADOS DO FUNCIONÁRIO: grade 3 colunas -->
+    <div style="background:#f0f4f8;border-bottom:1px solid #dde3ec;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:.66rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dados do funcionário</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 14px;font-size:.78rem">
+        <div><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Nome</div><div style="font-weight:600;color:#1a1a2e">${esc(nF)||'—'}</div></div>
+        <div><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">CPF</div><div style="font-weight:600;color:#1a1a2e">${cpf||'—'}</div></div>
+        <div><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Cargo</div><div style="font-weight:600;color:#1a1a2e">${esc(cargo)||'—'}</div></div>
+        <div><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Admissão</div><div style="font-weight:600;color:#1a1a2e">${fmtD(r.admissao)||'—'}</div></div>
+        <div><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Demissão</div><div style="font-weight:600;color:#1a1a2e">${fmtD(r.demissao)||'—'}</div></div>
+        <div><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Salário base</div><div style="font-weight:600;color:#1a1a2e">${r.salario?fmtR(pBRL(r.salario)):'—'}</div></div>
+        <div><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Aviso prévio</div><div style="font-weight:600;color:#1a1a2e">${r.avisoTipo==='trabalhado'?'Trabalhado':'Indenizado'}</div></div>
+        ${endF?`<div style="grid-column:span 2"><div style="font-size:.64rem;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Endereço</div><div style="font-weight:600;color:#1a1a2e">${esc(endF)}</div></div>`:''}
+      </div>
+    </div>
+    <table class="rct-tabela"><thead class="thead-cred"><tr><th>Verbas a Receber</th><th style="text-align:center">Referência</th><th style="text-align:right">Valor</th></tr></thead>
+    <tbody>${linhasC}<tr class="rct-subtotal-cred"><td colspan="2">Total Bruto</td><td style="text-align:right">${fmtR(r.totalCreditos||0)}</td></tr></tbody></table>
+    ${(r.debitos&&r.debitos.length)?`<table class="rct-tabela" style="margin-top:5px"><thead class="thead-desc"><tr><th>Descontos e Deduções</th><th style="text-align:center">Referência</th><th style="text-align:right">Valor</th></tr></thead>
+    <tbody>${linhasD}<tr class="rct-subtotal-desc"><td colspan="2">Total Descontos</td><td style="text-align:right">(${fmtR(r.totalDebitos||0)})</td></tr></tbody></table>`:''}
+    <table class="rct-tabela" style="margin-top:4px"><tbody><tr class="rct-liquido"><td colspan="2">Líquido a Receber</td><td style="text-align:right;font-size:.95rem">${fmtR(r.liquido||0)}</td></tr></tbody></table>
+    ${obsHtml}
+    <div class="rct-decl">${decl}</div>
+    <div class="rct-pgto">${cidade}, <span class="rct-pgto-linha"></span> de <span class="rct-pgto-mes"></span> de 20<span class="rct-pgto-ano"></span></div>
+    <div class="rct-ass">
+      <div class="rct-ass-col"><div class="rct-ass-linha"></div><div class="rct-ass-nome">${esc(nE||'Empregador(a)')}</div><div class="rct-ass-sub">Empregador(a)</div></div>
+      <div class="rct-ass-col"><div class="rct-ass-linha"></div><div class="rct-ass-nome">${esc(nF||'Funcionário(a)')}</div><div class="rct-ass-sub">Funcionário(a)</div></div>
+    </div>
+  </div>`;
+}
+function html2ViasRct(r){return`<div class="rct-via-pg">${htmlViaRct(r,'1ª VIA — EMPRESA')}</div><div class="rct-via-pg">${htmlViaRct(r,'2ª VIA — FUNCIONÁRIO')}</div>`;}
+
+// CONFIG
+async function salvarCfg(){
+  db.config={cidade:R('cfg-cidade').value,escritorio:R('cfg-esc').value,crc:R('cfg-crc').value,contador:R('cfg-cont').value};
+  await sbClient.from('configuracoes').upsert({chave:'config',valor:db.config},{onConflict:'chave'});
+  toast('Configurações salvas!','var(--green)');
+}
+function carregarCfg(){const c=db.config||{};R('cfg-cidade').value=c.cidade||'';R('cfg-esc').value=c.escritorio||'';R('cfg-crc').value=c.crc||'';R('cfg-cont').value=c.contador||'';}
+
+// BACKUP LOCAL
+function exportarDados(){
+  const stamp=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`backup_rct_${stamp}.json`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  const st=R('backup-status');st.style.display='block';st.style.color='var(--green2)';st.textContent='✅ Backup exportado!';
+}
+async function importarDados(input){
+  const file=input.files[0];if(!file)return;
+  const st=R('backup-status');
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!confirm(`Importar?\n• ${(d.rescisoes||[]).length} rescisão(ões)\n• ${(d.empresas||[]).length} empresa(s)\n• ${(d.funcionarios||[]).length} funcionário(s)\n\nIsso vai ADICIONAR ao banco atual. Confirma?`)){input.value='';return;}
+      showLoading('Importando dados...');
+      // Importa empresas
+      for(const e of (d.empresas||[])){const{id,...rest}=e;await sbClient.from('empresas').insert(rest);}
+      // Importa funcionários
+      for(const f of (d.funcionarios||[])){const{id,...rest}=f;await sbClient.from('funcionarios').insert(rest);}
+      // Importa rescisões
+      for(const r of (d.rescisoes||[])){
+        await sbClient.from('rescisoes').insert({nome_funcionario:r.nomeFuncionario,cpf_funcionario:r.cpfFuncionario,nome_empresa:r.nomeEmpresa,cnpj_empresa:r.cnpjEmpresa,tipo:r.tipoNome,demissao:r.demissao,total_creditos:r.totalCreditos,total_debitos:r.totalDebitos,liquido:r.liquido,dados:r});
+      }
+      await carregarTudo();
+      st.style.display='block';st.style.color='var(--green2)';st.textContent='✅ Importação concluída!';
+      hideLoading();
+    }catch(err){st.style.display='block';st.style.color='var(--red2)';st.textContent='❌ Erro ao importar.';hideLoading();}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+// IMPRESSÃO
+function imprimirJanela(elId){
+  const conteudo=document.getElementById(elId);if(!conteudo)return;
+  const css=`
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:#fff;color:#1a1a2e}
+    @page{size:A4 portrait;margin:10mm 14mm}
+    .rct-via-pg{page-break-after:always;break-after:page;page-break-inside:avoid}
+    .rct-via-pg:last-child{page-break-after:avoid;break-after:avoid}
+    .rct-wrap{padding:0;margin:0;font-family:'Outfit',sans-serif;position:relative;min-height:calc(297mm - 20mm)}
+    .rct-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a2e;padding-bottom:10px;margin-bottom:12px}
+    .rct-empresa-nome{font-family:'Playfair Display',serif;font-size:1rem;color:#1a1a2e;font-weight:700}
+    .rct-empresa-sub{font-size:.68rem;color:#555;margin-top:3px;line-height:1.5}
+    .rct-titulo-box{text-align:right}
+    .rct-titulo{font-family:'Playfair Display',serif;font-size:1.1rem;color:#1a1a2e;margin-bottom:4px;font-weight:700;letter-spacing:.01em}
+    .rct-tipo-badge{display:inline-block;background:#e8f4ff;color:#1e3a5f;border-radius:4px;padding:3px 10px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+    .rct-dados{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#f0f4f8;border-radius:7px;padding:9px 12px;margin-bottom:11px;font-size:.74rem;line-height:1.6}
+    .rct-dados strong{font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:#888;display:block;margin-bottom:1px}
+    .rct-tabela{width:100%;border-collapse:collapse;margin-bottom:0;font-size:.74rem;table-layout:fixed}
+    .rct-tabela th{padding:6px 10px;text-align:left;font-size:.65rem;text-transform:uppercase;letter-spacing:.04em}
+    .rct-tabela th:nth-child(1),.rct-tabela td:nth-child(1){width:auto;text-align:left}
+    .rct-tabela th:nth-child(2),.rct-tabela td:nth-child(2){width:160px;text-align:center;padding-left:10px;padding-right:10px;color:#555}
+    .rct-tabela th:nth-child(3),.rct-tabela td:nth-child(3){width:105px;text-align:right}
+    .rct-tabela td{padding:5px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+    .thead-cred tr th{background:#1b4332;color:#fff}.thead-desc tr th{background:#7f1d1d;color:#fff}
+    .rct-subtotal-cred td{background:#d1fae5;font-weight:700;color:#1b4332;font-size:.74rem}
+    .rct-subtotal-desc td{background:#fee2e2;font-weight:700;color:#7f1d1d;font-size:.74rem}
+    .rct-liquido td{background:#1a1a2e;color:#fff;font-weight:700;font-size:.84rem}
+    .rct-decl{border:1px solid #ddd;border-radius:6px;padding:9px 12px;margin-bottom:9px;font-size:.71rem;line-height:1.65;color:#333;margin-top:10px}
+    .rct-obs-box{border:1px solid #ddd;border-radius:6px;padding:7px 11px;margin-bottom:9px;font-size:.71rem;color:#555}
+    .rct-pgto{font-size:.71rem;color:#555;margin-bottom:9px;padding:4px 0;margin-top:22px;display:flex;align-items:baseline;gap:3px;flex-wrap:wrap}
+    .rct-pgto-linha{display:inline-block;border-bottom:1px solid #555;width:28px;margin:0 2px;vertical-align:baseline}
+    .rct-pgto-mes{display:inline-block;border-bottom:1px solid #555;width:88px;margin:0 2px;vertical-align:baseline}
+    .rct-pgto-ano{display:inline-block;border-bottom:1px solid #555;width:20px;margin:0 2px;vertical-align:baseline}
+    .rct-ass{display:flex;justify-content:space-around;align-items:flex-end;margin-top:34px;gap:40px}
+    .rct-ass-col{display:flex;flex-direction:column;align-items:center;flex:1;max-width:220px}
+    .rct-ass-linha{border-top:1.5px solid #333;width:100%;margin-bottom:5px;margin-top:46px}
+    .rct-ass-nome{font-size:.74rem;color:#333;font-weight:600;white-space:nowrap;text-align:center}
+    .rct-ass-sub{font-size:.64rem;color:#888;text-align:center;margin-top:2px}
+    .rct-rodape{text-align:center;font-size:.65rem;color:#bbb;margin-top:14px;padding-top:7px;border-top:1px solid #eee}
+  `;
+  const w=window.open('','_blank','width=900,height=700');
+  w.document.open();
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Rescisão</title><style>${css}</style></head><body>${conteudo.innerHTML}</body></html>`);
+  w.document.close();
+  w.onload=()=>setTimeout(()=>{w.focus();w.print();},600);
+}
+
+// INIT — aguarda o SDK do Supabase carregar antes de iniciar
+window.addEventListener('DOMContentLoaded',()=>{
+  // Mostra tela de setup imediatamente para evitar tela preta
+  carregarCredenciais();
+  if(!SUPABASE_URL||!SUPABASE_KEY){
+    R('tela-setup').style.display='flex';
+  }
+
+  // Função chamada quando SDK terminar de carregar (ou falhar)
+  window._tentarInit=()=>iniciarApp();
+
+  // Se SDK já carregou (cache do navegador), inicia direto
+  if(window._sdkCarregado||window._sdkErro){
+    iniciarApp();
+  }
+  // Se o script ainda está carregando, o onload do script vai chamar _tentarInit
+});
+</script>
+</body>
+</html>
