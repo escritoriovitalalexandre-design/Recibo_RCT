@@ -353,7 +353,7 @@ tr:hover td{background:var(--bg3)}
         <div class="field"><label>Bairro</label><input type="text" id="emp-bairro" placeholder="Centro" oninput="maiusculas(this)"></div>
         <div class="field"><label>Cidade</label><input type="text" id="emp-cidade" placeholder="Itirapina" oninput="maiusculas(this)"></div>
         <div class="field"><label>UF</label><input type="text" id="emp-uf" placeholder="SP" maxlength="2" oninput="maiusculas(this)"></div>
-        <div class="field"><label>CEP</label><input type="text" id="emp-cep" placeholder="00000-000" maxlength="9" oninput="mascararCEP(this)"></div>
+        <div class="field"><label>CEP</label><input type="text" id="emp-cep" placeholder="00000-000" maxlength="9" oninput="mascararCEP(this,'emp')"><div id="emp-cep-status" style="font-size:.72rem;color:var(--green2);margin-top:3px"></div></div>
       </div>
     </div>
     <div class="btn-row">
@@ -396,7 +396,7 @@ tr:hover td{background:var(--bg3)}
         <div class="field"><label>Bairro</label><input type="text" id="func-bairro" placeholder="Centro" oninput="maiusculas(this)"></div>
         <div class="field"><label>Cidade</label><input type="text" id="func-cidade" placeholder="Itirapina" oninput="maiusculas(this)"></div>
         <div class="field"><label>UF</label><input type="text" id="func-uf" placeholder="SP" maxlength="2" oninput="maiusculas(this)"></div>
-        <div class="field"><label>CEP</label><input type="text" id="func-cep" placeholder="00000-000" maxlength="9" oninput="mascararCEP(this)"></div>
+        <div class="field"><label>CEP</label><input type="text" id="func-cep" placeholder="00000-000" maxlength="9" oninput="mascararCEP(this,'func')"><div id="func-cep-status" style="font-size:.72rem;color:var(--green2);margin-top:3px"></div></div>
       </div>
     </div>
     <div class="btn-row">
@@ -847,7 +847,31 @@ function hideLoading(){R('loading-overlay').classList.remove('show');}
 // MÁSCARAS
 function maiusculas(el){const p=el.selectionStart;el.value=el.value.toUpperCase();el.setSelectionRange(p,p);}
 function mascararSalario(el){let v=el.value.replace(/\D/g,'');if(!v){el.value='';return;}v=(parseInt(v)/100).toFixed(2);v=v.replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');el.value=v;}
-function mascararCEP(el){let v=el.value.replace(/\D/g,'').slice(0,8);if(v.length>5)v=v.replace(/(\d{5})(\d{0,3})/,'$1-$2');el.value=v;}
+function mascararCEP(el,prefixo){
+  let v=el.value.replace(/\D/g,'').slice(0,8);
+  if(v.length>5)v=v.replace(/(\d{5})(\d{0,3})/,'$1-$2');
+  el.value=v;
+  if(v.replace(/\D/g,'').length===8)buscarCEP(v,prefixo);
+}
+async function buscarCEP(cep,prefixo){
+  const digits=cep.replace(/\D/g,'');
+  if(digits.length!==8)return;
+  const st=R(prefixo+'-cep-status');
+  if(st){st.textContent='🔍 Buscando...';st.style.color='var(--text3)';}
+  try{
+    const res=await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+    const d=await res.json();
+    if(d.erro){if(st){st.textContent='CEP não encontrado';st.style.color='var(--red2)';}return;}
+    if(R(prefixo+'-rua'))R(prefixo+'-rua').value=(d.logradouro||'').toUpperCase();
+    if(R(prefixo+'-bairro'))R(prefixo+'-bairro').value=(d.bairro||'').toUpperCase();
+    if(R(prefixo+'-cidade'))R(prefixo+'-cidade').value=(d.localidade||'').toUpperCase();
+    if(R(prefixo+'-uf'))R(prefixo+'-uf').value=(d.uf||'').toUpperCase();
+    if(st){st.textContent='✅ Endereço preenchido!';st.style.color='var(--green2)';setTimeout(()=>st.textContent='',3000);}
+  }catch(e){
+    if(st){st.textContent='Erro ao buscar CEP';st.style.color='var(--red2)';}
+    console.error('Erro ao buscar CEP:',e);
+  }
+}
 function mascararCPF(el){let v=el.value.replace(/\D/g,'').slice(0,11);if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');else if(v.length>3)v=v.replace(/(\d{3})(\d{0,3})/,'$1.$2');el.value=v;}
 function mascararCNPJCPF(el){let v=el.value.replace(/\D/g,'');if(v.length<=11){if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');else if(v.length>3)v=v.replace(/(\d{3})(\d{0,3})/,'$1.$2');}else{v=v.slice(0,14);v=v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/,'$1.$2.$3/$4-$5');}el.value=v;}
 function mascararRG(el){let v=el.value.replace(/\D/g,'').slice(0,9);if(v.length>8)v=v.replace(/(\d{2})(\d{3})(\d{3})(\d)/,'$1.$2.$3-$4');else if(v.length>5)v=v.replace(/(\d{2})(\d{3})(\d{0,3})/,'$1.$2.$3');else if(v.length>2)v=v.replace(/(\d{2})(\d{0,3})/,'$1.$2');el.value=v;}
