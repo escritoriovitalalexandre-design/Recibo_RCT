@@ -594,24 +594,34 @@ let sbClient=null;
 let usuarioAtual=null;
 
 function carregarCredenciais(){
-  // Credenciais fixas — qualquer usuário abre direto no login
-  SUPABASE_URL='https://dwpvqhlmcxmexpleailx.supabase.co';
-  SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3cHZxaGxtY3htZXhwbGVhaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NTI0NTEsImV4cCI6MjA5MjEyODQ1MX0.6pApSq3KPC2FlN_J8IyWaL_yk9SnigrwMmg3hibu2W0';
+  SUPABASE_URL=(localStorage.getItem('rct_sb_url')||'').trim();
+  SUPABASE_KEY=(localStorage.getItem('rct_sb_key')||'').trim();
+}
+function limparCredenciaisSalvas(){
+  localStorage.removeItem('rct_sb_url');
+  localStorage.removeItem('rct_sb_key');
+  SUPABASE_URL='';
+  SUPABASE_KEY='';
 }
 function salvarSetup(){
   const url=R('setup-url').value.trim();
   const key=R('setup-key').value.trim();
   const msg=R('setup-msg');
   if(!url||!key){msg.className='login-msg err';msg.textContent='Preencha os dois campos.';return;}
-  if(!url.includes('supabase.co')){msg.className='login-msg err';msg.textContent='URL inválida. Deve conter supabase.co';return;}
+  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)){msg.className='login-msg err';msg.textContent='URL inválida. Use o formato https://SEU-PROJETO.supabase.co';return;}
+  if(key.length<20){msg.className='login-msg err';msg.textContent='Chave pública inválida.';return;}
   localStorage.setItem('rct_sb_url',url);
   localStorage.setItem('rct_sb_key',key);
+  carregarCredenciais();
   msg.className='login-msg ok';msg.textContent='✅ Credenciais salvas! Iniciando...';
-  setTimeout(()=>iniciarApp(),800);
+  setTimeout(()=>iniciarApp(),500);
 }
 function voltarSetup(){
   R('tela-login').style.display='none';
+  R('app-principal').style.display='none';
   R('tela-setup').style.display='flex';
+  R('setup-url').value=SUPABASE_URL||'';
+  R('setup-key').value=SUPABASE_KEY||'';
 }
 
 // ============================================================
@@ -620,8 +630,14 @@ function voltarSetup(){
 async function iniciarApp(){
   carregarCredenciais();
 
-  // Credenciais fixas — pula setup direto para login
-  R('tela-setup').style.display='none';
+  if(!SUPABASE_URL||!SUPABASE_KEY){
+    R('tela-setup').style.display='flex';
+    R('tela-login').style.display='none';
+    R('app-principal').style.display='none';
+    if(R('setup-url'))R('setup-url').value=SUPABASE_URL||'';
+    if(R('setup-key'))R('setup-key').value=SUPABASE_KEY||'';
+    return;
+  }
 
   // SDK não carregou (sem internet ou bloqueado)
   if(!window._sdkCarregado||!window.supabase){
@@ -635,7 +651,9 @@ async function iniciarApp(){
 
   try{
     sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const {data:{session}}=await sbClient.auth.getSession();
+    const {data, error}=await sbClient.auth.getSession();
+    if(error) throw error;
+    const session=data?.session;
     if(session){
       usuarioAtual=session.user;
       mostrarApp();
@@ -643,14 +661,18 @@ async function iniciarApp(){
       R('tela-setup').style.display='none';
       R('tela-login').style.display='flex';
       R('app-principal').style.display='none';
+      const cfgLink=document.querySelector('.login-config-link');
+      if(cfgLink) cfgLink.style.display='block';
     }
   }catch(e){
     console.error('Erro ao iniciar Supabase:',e);
+    limparCredenciaisSalvas();
+    sbClient=null;
     R('tela-setup').style.display='flex';
     R('tela-login').style.display='none';
     R('app-principal').style.display='none';
     R('setup-msg').className='login-msg err';
-    R('setup-msg').textContent='Credenciais inválidas ou sem conexão. Verifique a URL e a chave.';
+    R('setup-msg').textContent='Credenciais inválidas ou conexão indisponível. Informe novamente a URL e a chave.';
   }
 }
 function mostrarApp(){
@@ -730,16 +752,33 @@ async function carregarTudo(){
       sbClient.from('empresas').select('*').order('nome'),
       sbClient.from('funcionarios').select('*').order('nome'),
       sbClient.from('rescisoes').select('*').order('created_at',{ascending:false}),
-      sbClient.from('configuracoes').select('*').eq('chave','config').single(),
+      sbClient.from('configuracoes').select('*').eq('chave','config').maybeSingle(),
     ]);
-    db.empresas=empRes.data||[];
-    db.funcionarios=funcRes.data||[];
-    db.rescisoes=rctRes.data?.map(r=>({...r,...(r.dados||{}),id:r.id,_dados_original:r.dados}))||[];
-    db.config=cfgRes.data?.valor||{cidade:''};
+
+    if(empRes.error) throw empRes.error;
+    if(funcRes.error) throw funcRes.error;
+    if(rctRes.error) throw rctRes.error;
+    if(cfgRes.error && cfgRes.error.code!=='PGRST116') throw cfgRes.error;
+
+    db.empresas=Array.isArray(empRes.data)?empRes.data:[];
+    db.funcionarios=Array.isArray(funcRes.data)?funcRes.data:[];
+    const rescisoesOriginais=Array.isArray(rctRes.data)?rctRes.data:[];
+    db.rescisoes=rescisoesOriginais.map(r=>({
+      ...(r?.dados && typeof r.dados==='object' ? r.dados : {}),
+      ...r,
+      id:r.id,
+      _dados_original:(r?.dados && typeof r.dados==='object') ? r.dados : {},
+    }));
+    db.config=(cfgRes.data && typeof cfgRes.data.valor==='object' && cfgRes.data.valor)?cfgRes.data.valor:{cidade:''};
     setSyncStatus('ok');
-  }catch(e){setSyncStatus('error');toast('Erro ao carregar dados','var(--red)');}
-  hideLoading();
-  renderDashboard();
+  }catch(e){
+    console.error('Erro ao carregar dados:',e);
+    setSyncStatus('error');
+    toast('Erro ao carregar dados: '+(e.message||'falha inesperada'),'var(--red)');
+  }finally{
+    hideLoading();
+    renderDashboard();
+  }
 }
 
 // SALVAR com debounce
@@ -1543,10 +1582,11 @@ function imprimirJanela(elId){
 
 // INIT — aguarda o SDK do Supabase carregar antes de iniciar
 window.addEventListener('DOMContentLoaded',()=>{
-  // Mostra tela de setup imediatamente para evitar tela preta
   carregarCredenciais();
   if(!SUPABASE_URL||!SUPABASE_KEY){
     R('tela-setup').style.display='flex';
+    if(R('setup-url'))R('setup-url').value=SUPABASE_URL||'';
+    if(R('setup-key'))R('setup-key').value=SUPABASE_KEY||'';
   }
 
   // Função chamada quando SDK terminar de carregar (ou falhar)
